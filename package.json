@@ -1,0 +1,54 @@
+{
+  "name": "vue-di-loader",
+  "version": "0.0.0",
+  "description": "Vue Dependency Injection Webpack Loader",
+  "main": "lib/index",
+  "types": "index",
+  "scripts": {
+    "clean": "rm -rf lib/*",
+    "build": "tsc",
+    "test": "./node_modules/.bin/jasmine-ts",
+    "preversion": "npm run clean && npm test",
+    "version": "npm run build && git add .",
+    "postversion": "git push && git push --tags && npm publish --access public",
+    "patch": "npm version patch -m \"[PATCH] version (%s)\"",
+    "minor": "npm version minor -m \"[MINOR] version (%s)\"",
+    "major": "npm version major -m \"[MAJOR] version (%s)\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joejukan/vue-di-loader.git"
+  },
+  "keywords": [
+    "Vue",
+    "Dependency",
+    "Injection",
+    "DI",
+    "Webpack",
+    "Loader"
+  ],
+  "author": "Joseph Eniojukan (https://github.com/joejukan)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joejukan/vue-di-loader/issues"
+  },
+  "homepage": "https://github.com/joejukan/vue-di-loader#readme",
+  "dependencies": {
+    "@joejukan/argumenter": "1.0.3",
+    "loader-utils": "1.1.0",
+    "schema-utils": "0.4.5",
+    "ts-simple-ast": "12.4.0",
+    "upath": "1.1.0",
+    "xmldom": "0.1.27",
+    "vue": "2.5.16",
+    "vue-template-compiler": "2.5.16"
+  },
+  "devDependencies": {
+    "vue-di-kit": "0.0.2",
+    "@types/node": "10.3.5",
+    "typescript": "2.9.2",
+    "@types/jasmine": "2.8.8",
+    "jasmine-ts": "0.2.1",
+    "jasmine-spec-reporter": "4.2.1"
+  }
+}
