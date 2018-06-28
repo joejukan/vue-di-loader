@@ -2,7 +2,7 @@
   "name": "vue-di-loader",
   "version": "0.0.3",
   "description": "Vue Dependency Injection Webpack Loader",
-  "main": "lib/index",
+  "main": "lib/loader",
   "types": "index",
   "scripts": {
     "clean": "rm -rf lib/*",

@@ -223,9 +223,9 @@ export class ASTClass extends AST{
 
                 if(decorator.getName() === "Component"){
                     let args = decorator.getArguments() || [];
-                    let arg: Node = <Node> (args.length > 0 ? args[0] : {});
+                    let opts: string = (args.length > 0 ? args[0].getText() : "{}");
                     let options = <any> {};
-                    eval(`options = ${arg.getText()}`);
+                    eval(`options = ${opts}`);
                     let name = undefined;
                     let symbol = cls.getName();
                     if(options.name){
