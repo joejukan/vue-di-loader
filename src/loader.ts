@@ -7,7 +7,7 @@ function load(content: string);
 function load(this: Context, content: string){
     let options = getOptions(this);
     this.cacheable();
-    validateOptions(schema, options, 'wave-loader');
+    validateOptions(schema, options, 'vue-di-loader');
     
     let ast = new ASTClass(this.resourcePath);
     ast.load(content);
