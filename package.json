@@ -44,7 +44,7 @@
     "vue-template-compiler": "2.5.16"
   },
   "devDependencies": {
-    "vue-di-kit": "0.0.2",
+    "vue-di-kit": "0.0.3",
     "@types/node": "10.3.5",
     "typescript": "2.9.2",
     "@types/jasmine": "2.8.8",
