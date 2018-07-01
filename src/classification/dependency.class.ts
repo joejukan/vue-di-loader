@@ -7,15 +7,20 @@ export class DependencyClass {
     public name: string;
     public path: string;
     public symbol: string;
+    public defaulted: boolean;
 
     public constructor(name: string);
+    public constructor(name: string, defaulted: boolean);
     public constructor(name: string, symbol: string);
+    public constructor(name: string, symbol: string, defaulted: boolean);
     public constructor(name: string, symbol: string, path: string);
+    public constructor(name: string, symbol: string, path: string, defaulted: boolean);
     public constructor(...args){
         let argue = new Argumenter(args);
         this.name = argue.string;
         this.symbol = argue.string;
         this.path = argue.string;
+        this.defaulted = argue.boolean || false;
     }
 
     public relative(path: string): string {

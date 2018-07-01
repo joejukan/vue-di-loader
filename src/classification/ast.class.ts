@@ -5,10 +5,11 @@ import {DOMParser, XMLSerializer} from "xmldom";
 import * as compiler from "vue-template-compiler";
 import {ComponentOptions, DirectiveOptions, ComputedOptions, } from "vue";
 import {readFileSync as read} from "fs";
-import AST, {SourceFile, Node, VariableDeclarationKind} from "ts-simple-ast";
+import AST, {SourceFile, Node, VariableDeclarationKind, ImportDeclarationStructure} from "ts-simple-ast";
 import {transpile, CompilerOptions, ModuleResolutionKind, ModuleKind} from "typescript";
-import { kebab, preCompile, functionString } from '../function';
+import { preCompile, functionString } from '../function';
 import { Argumenter } from '@joejukan/argumenter';
+import { kebab } from '@joejukan/web-kit';
 
 const RENDER_NAME = "__render__";
 const STATIC_RENDER_NAME = "__staticrender__";
@@ -159,12 +160,17 @@ export class ASTClass extends AST{
 
                 for(let j = 0; j < imports.length; j++){
                     let imp = imports[j];
-                    source.insertImportDeclaration(0, {
-                        moduleSpecifier: imp.relative(this.path),
-                        namedImports: [{
-                            name: imp.symbol
-                        }]
-                    })
+                    let opts = <ImportDeclarationStructure>{
+                        moduleSpecifier: imp.relative(this.path)
+                    };
+
+                    if(imp.defaulted){
+                        opts.defaultImport = imp.symbol;
+                    }
+                    else{
+                        opts.namedImports = [{name: imp.symbol}];
+                    }
+                    source.insertImportDeclaration(0, opts);
                 }
                 
                 options.render = <any> "%%%RENDER%%%";
@@ -235,7 +241,7 @@ export class ASTClass extends AST{
                         name = kebab(symbol);
                     }
 
-                    dependencies[name] = new DependencyClass(name, symbol, path);
+                    dependencies[name] = new DependencyClass(name, symbol, path, cls.isDefaultExport());
                     return;
                 }
             }
