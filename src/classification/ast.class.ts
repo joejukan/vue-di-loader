@@ -1,15 +1,16 @@
-import { DependencyClass } from '../classification';
+import { DependencyClass, ASTFinder } from '../classification';
 import { dependencies } from "../globalization";
 import {basename, extname} from "path";
 import {DOMParser, XMLSerializer} from "xmldom";
 import * as compiler from "vue-template-compiler";
-import {ComponentOptions, DirectiveOptions, ComputedOptions, } from "vue";
+import Vue, {ComponentOptions, DirectiveOptions, ComputedOptions} from "vue";
 import {readFileSync as read} from "fs";
-import AST, {SourceFile, Node, VariableDeclarationKind, ImportDeclarationStructure} from "ts-simple-ast";
+import AST, {SourceFile, Node, VariableDeclarationKind, ImportDeclarationStructure, SyntaxKind, NewExpression, 
+    SyntaxList, PropertyAssignment, ObjectLiteralExpression} from "ts-simple-ast";
 import {transpile, CompilerOptions, ModuleResolutionKind, ModuleKind} from "typescript";
 import { preCompile, functionString } from '../function';
 import { Argumenter } from '@joejukan/argumenter';
-import { kebab } from '@joejukan/web-kit';
+import { kebab, uuid } from '@joejukan/web-kit';
 
 const RENDER_NAME = "__render__";
 const STATIC_RENDER_NAME = "__staticrender__";
@@ -47,6 +48,22 @@ export class ASTClass extends AST{
             let ext = extname(path);
             return `${base}.${ext}`;
         }
+    }
+
+    private toImportDeclaration(dependency: DependencyClass) {
+
+        let declaration = <ImportDeclarationStructure>{
+            moduleSpecifier: dependency.relative(this.path)
+        };
+
+        if (dependency.defaulted) {
+            declaration.defaultImport = dependency.symbol;
+        }
+        else {
+            declaration.namedImports = [{ name: dependency.symbol }];
+        }
+
+        return declaration;
     }
 
     private processScript() {
@@ -160,17 +177,8 @@ export class ASTClass extends AST{
 
                 for(let j = 0; j < imports.length; j++){
                     let imp = imports[j];
-                    let opts = <ImportDeclarationStructure>{
-                        moduleSpecifier: imp.relative(this.path)
-                    };
-
-                    if(imp.defaulted){
-                        opts.defaultImport = imp.symbol;
-                    }
-                    else{
-                        opts.namedImports = [{name: imp.symbol}];
-                    }
-                    source.insertImportDeclaration(0, opts);
+                    source.insertImportDeclaration(0, this.toImportDeclaration(imp));
+                    source.organizeImports();
                 }
                 
                 options.render = <any> "%%%RENDER%%%";
@@ -215,7 +223,7 @@ export class ASTClass extends AST{
     public pitch(path: string){
         let content: string = read(path,'utf-8');
         content = "<source>" + content + "</source>";
-        let source = this.createSourceFile('tmp.ts');
+        let source = this.createSourceFile(`${uuid()}.ts`);
         source.insertText(0, content);
 
         let classes = source.getClasses();
@@ -225,7 +233,7 @@ export class ASTClass extends AST{
             let decorators = cls.getDecorators();
 
             for(let j = 0; j < decorators.length; j++){
-                let decorator = decorators[i];
+                let decorator = decorators[j];
 
                 if(decorator.getName() === "Component"){
                     let args = decorator.getArguments() || [];
@@ -246,6 +254,74 @@ export class ASTClass extends AST{
                 }
             }
         }
+    }
 
+    public inject(content: string) {
+        let source =  this.createSourceFile(`${uuid()}.ts`);
+        source.replaceWithText(content);
+        
+        if (!source)
+            return;
+
+        let finder = new ASTFinder(source);
+        let declaration = finder.findVariableDeclaration('CombinedVueInstance');
+
+        if (!declaration)
+            return;
+
+        let lastChild = declaration.getLastChild();
+        let expression: NewExpression = declaration.getFirstChildByKind(SyntaxKind.NewExpression);
+
+        if (!expression)
+            return;
+
+        let args = expression.getArguments();
+
+        if (!args || args.length != 1)
+            return;
+
+        let arg = args[0];
+        let object = arg.getFirstChildByKind(SyntaxKind.SyntaxList)
+        if (!object)
+            return;
+
+        let pairs = object.getChildren();
+
+        if (!pairs)
+            return;
+
+        let components: ObjectLiteralExpression;
+        
+        pairs.forEach(pair => {
+            let key = pair.getFirstChildByKind(SyntaxKind.Identifier);
+            let kind = pair.getKind();
+            if (key && key.getText() === 'components') {
+                if(kind === SyntaxKind.ShorthandPropertyAssignment){
+                    pair.replaceWithText('components: {...components}');
+                }
+                else if(kind === SyntaxKind.PropertyAssignment){
+                }
+                else{
+                    pair.replaceWithText('components: {}');
+                }
+                components = <ObjectLiteralExpression> pair.getFirstChildByKind(SyntaxKind.ObjectLiteralExpression);
+            }
+        })
+
+        if(!components){
+            if(object.getLastChild().getKind() !== SyntaxKind.CommaToken){
+                object.addChildText(',');
+            }
+            components = <ObjectLiteralExpression> object.addChildText('components: {}')[0].getFirstChildByKind(SyntaxKind.ObjectLiteralExpression);
+        }
+
+        for(let k in dependencies){
+            let dependency = dependencies[k];
+            source.addImportDeclaration(this.toImportDeclaration(dependency));
+            components.addPropertyAssignment({ name: `'${dependency.name}'`, initializer: dependency.symbol})
+        }
+        source.organizeImports();
+        console.log(source.getText())
+        this.typescript = source.getText();
     }
 }

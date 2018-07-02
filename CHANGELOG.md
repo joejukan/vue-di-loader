@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
 
+## [0.0.6] - 2018-07-02
+* updated root index definition type to point to `./lib/loader`.
+* updated `package.json` moving `vue-di-kit` from dev dependency to a regular dependency.
+* added `VueDIPlugin` class to be used to scan all SFC files and pitch them beforehand.
+* updated webpack loader to support only `.vue` files and `.ts` files specified as the application entry.
+* updated `ASTClass` with the `inject` function that injects pitched components into the entry application.
+* updated `DependencyClass` vue file regex and added a constructor that accepts no arguments. 
+* addded simple unit test for plugin.
+
 ## [0.0.5] - 2018-07-01
 * added support for default imports.
 * upgraded `vue-di-kit` to version `0.0.4`.
