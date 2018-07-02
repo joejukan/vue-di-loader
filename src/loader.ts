@@ -1,7 +1,7 @@
 import {getOptions} from "loader-utils"
 import validateOptions = require("schema-utils");
 import {ASTClass, VueDIPlugin} from "./classification"
-import { schema } from "./globalization";
+import { schema, configuration } from "./globalization";
 
 export { pitch } from "./function";
 export { VueDIPlugin } from "./classification";
@@ -9,7 +9,7 @@ export { VueDIPlugin } from "./classification";
 function load(content: string);
 function load(this: Context, content: string){
     let options = getOptions(this);
-    let entries = VueDIPlugin.entries;
+    let entries = configuration.entries;
     this.cacheable();
     validateOptions(schema, options, 'vue-di-loader');
     

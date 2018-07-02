@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
 
+## [0.0.7] - 2018-07-02
+* updated readme documentation to provide details on functionality and usage.
+* added `ASTParser` class.
+* added logging functionality on `ASTClass`.
+* added logging functionality on `VueDIPlugin`.
+
 ## [0.0.6] - 2018-07-02
 * updated root index definition type to point to `./lib/loader`.
 * updated `package.json` moving `vue-di-kit` from dev dependency to a regular dependency.

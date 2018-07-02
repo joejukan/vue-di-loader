@@ -3,19 +3,28 @@ import {resolve, sep} from "path";
 import {statSync, readdirSync} from "fs";
 import { Argumenter } from "@joejukan/argumenter";
 import { access, kebab } from "@joejukan/web-kit";
-import { PluginOptions, dependencies, DependencyClass, ASTClass } from "../.";
+import { PluginOptions } from "../abstraction";
+import { configuration, dependencies } from "../globalization";
+import { DependencyClass, ASTClass } from ".";
+import { log } from "../function";
 
 import Compilation = compilation.Compilation;
 import Chunk = compilation.Chunk
 
+
 export class VueDIPlugin implements Plugin {
-    public static pitched: boolean = false;
-    public static entries: string[] = [];
     private options: PluginOptions;
     public constructor(options: PluginOptions )
     public constructor(...args){
         let argue = new Argumenter(args);
-        let options: PluginOptions = this.options = <any> argue.object;
+        this.options = <any> argue.object;
+        if(typeof access(this, 'options.debug') === 'boolean'){
+            configuration.verbose = this.options.debug;
+        }
+
+        if(typeof access(this, 'options.components.deep') === 'boolean'){
+            configuration.deep = this.options.components.deep;
+        }
     }
     public apply(compiler: Compiler){
         compiler.hooks.beforeCompile.tap('VueDIPlugin', (compilation) => {
@@ -47,10 +56,10 @@ export class VueDIPlugin implements Plugin {
 
             // TODO: support Entry and EntryFunc
             if(Array.isArray(entries)){
-                entries.forEach(entry => VueDIPlugin.entries.push(resolve(entry)));
+                entries.forEach(entry => configuration.entries.push(resolve(entry)));
             }
             else if(typeof entries === 'string'){
-                VueDIPlugin.entries.push(resolve(entries));
+                configuration.entries.push(resolve(entries));
             }
             for(let k in dependencies){
                 this.log(`identified dependency: ${k}`)
@@ -74,18 +83,31 @@ export class VueDIPlugin implements Plugin {
     public pitch(path: string){
         path = resolve(path);
         let stats = statSync(path);
-        this.log(`pitching path: ${path}`);
 
         if(stats.isDirectory()){
             let files = readdirSync(path);
-            files.forEach(file => this.pitch(`${path}${sep}${file}`));
+
+            if(configuration.deep){
+                files.forEach(file => this.pitch(`${path}${sep}${file}`));
+            }
+
+            else{
+                files.forEach(file => {
+                    let filePath = `${path}${sep}${file}`;
+                    let fileStats = statSync(filePath);
+                    if(fileStats.isFile()){
+                        this.pitch(filePath)
+                    }
+                });
+            }
+            
         }
         else if(stats.isFile()){
             if(/\.vue$/i.test(path)){
 
                 /* set pitched boolean */
-                if(!VueDIPlugin.pitched){
-                    VueDIPlugin.pitched = true;
+                if(!configuration.pitched){
+                    configuration.pitched = true;
                 }
 
                 let ast = new ASTClass();
@@ -98,9 +120,7 @@ export class VueDIPlugin implements Plugin {
         path = resolve(path);
     }
 
-    public log(value: string){
-        if(access(this, 'options.debug')){
-            console.log(`[vue-di-plugin] ${value}`);
-        }
+    public log(value: any){
+        log(`[vue-di-plugin] ${value}`);
     }
 }

@@ -1,4 +1,4 @@
-import { DependencyClass, ASTFinder } from '../classification';
+import { DependencyClass, ASTParser } from '../classification';
 import { dependencies } from "../globalization";
 import {basename, extname} from "path";
 import {DOMParser, XMLSerializer} from "xmldom";
@@ -8,7 +8,7 @@ import {readFileSync as read} from "fs";
 import AST, {SourceFile, Node, VariableDeclarationKind, ImportDeclarationStructure, SyntaxKind, NewExpression, 
     SyntaxList, PropertyAssignment, ObjectLiteralExpression} from "ts-simple-ast";
 import {transpile, CompilerOptions, ModuleResolutionKind, ModuleKind} from "typescript";
-import { preCompile, functionString } from '../function';
+import { preCompile, functionString, log } from '../.';
 import { Argumenter } from '@joejukan/argumenter';
 import { kebab, uuid } from '@joejukan/web-kit';
 
@@ -49,7 +49,9 @@ export class ASTClass extends AST{
             return `${base}.${ext}`;
         }
     }
-
+    private log(value: any){
+        log(`[ast-class] ${value}`);
+    }
     private toImportDeclaration(dependency: DependencyClass) {
 
         let declaration = <ImportDeclarationStructure>{
@@ -223,9 +225,12 @@ export class ASTClass extends AST{
             allowSyntheticDefaultImports: true,
             noImplicitUseStrict: true
         });
+
+        this.log(`loading content from ${this.path}:\n${this.typescript}`)
     }
 
     public pitch(path: string){
+        this.log(`pitching (${path})`);
         let content: string = read(path,'utf-8');
         content = "<source>" + content + "</source>";
         let source = this.createSourceFile(`${uuid()}.ts`);
@@ -268,7 +273,7 @@ export class ASTClass extends AST{
         if (!source)
             return;
 
-        let finder = new ASTFinder(source);
+        let finder = new ASTParser(source);
         let declaration = finder.findVariableDeclaration('CombinedVueInstance');
 
         if (!declaration)
@@ -326,7 +331,7 @@ export class ASTClass extends AST{
             components.addPropertyAssignment({ name: `'${dependency.name}'`, initializer: dependency.symbol})
         }
         source.organizeImports();
-        console.log(source.getText())
         this.typescript = source.getText();
+        this.log(`after injection in (${this.path}):\n${this.typescript}`);
     }
 }
