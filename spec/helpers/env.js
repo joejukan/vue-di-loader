@@ -1,0 +1,1 @@
+process.env.VUE_DI_TESTING = true;

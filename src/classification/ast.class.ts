@@ -178,7 +178,6 @@ export class ASTClass extends AST{
                 for(let j = 0; j < imports.length; j++){
                     let imp = imports[j];
                     source.insertImportDeclaration(0, this.toImportDeclaration(imp));
-                    source.organizeImports();
                 }
                 
                 options.render = <any> "%%%RENDER%%%";
@@ -196,6 +195,12 @@ export class ASTClass extends AST{
                 arg.replaceWithText(optionString);
             }
         }
+        try{
+            source.organizeImports();
+        }
+        catch(ex){
+        }
+        
         this.typescript = source.getText();
     }
 

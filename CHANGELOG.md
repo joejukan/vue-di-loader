@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * updated `ASTClass` with the `inject` function that injects pitched components into the entry application.
 * updated `DependencyClass` vue file regex and added a constructor that accepts no arguments. 
 * addded simple unit test for plugin.
+* added `env.js` helper script to set system environment variable.
+* update `ASTClass`to add try and catch case over the organizeImports command method.
 
 ## [0.0.5] - 2018-07-01
 * added support for default imports.
