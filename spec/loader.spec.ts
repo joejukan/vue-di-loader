@@ -11,7 +11,7 @@ table.load();
 
 describe(`webpack loader tests`, () => {
     it(`test dependencies`, () => {
-        ['app', 'table-component'].forEach( name => { 
+        ['app', 'tab-component'].forEach( name => { 
             expect(dependencies[name]).toBeDefined(`could not find the ${ /component/i.test(name) ? name : name + ' component' } in the dependencies`)
         });
     });

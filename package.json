@@ -25,7 +25,8 @@
     "Injection",
     "DI",
     "Webpack",
-    "Loader"
+    "Loader",
+    "TypeScript"
   ],
   "author": "Joseph Eniojukan (https://github.com/joejukan)",
   "license": "ISC",

@@ -3,11 +3,16 @@ All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
 
-## [0.0.7] - 2018-07-02
+## [0.0.7] - 2018-07-03
 * updated readme documentation to provide details on functionality and usage.
 * added `ASTParser` class.
 * added logging functionality on `ASTClass`.
 * added logging functionality on `VueDIPlugin`.
+* added `TypeScript` keyword to `package.json`.
+* updated loader unit tests to consider use case of setting name property on `@Component` decorator option.
+* removed all `eval` function implementation on `ASTClass`.
+* added `get` and `exists` methods on `ASTParser`.
+* added not on `@Component` decorator usage on `README.md`.
 
 ## [0.0.6] - 2018-07-02
 * updated root index definition type to point to `./lib/loader`.

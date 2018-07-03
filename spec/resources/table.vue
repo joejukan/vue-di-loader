@@ -19,7 +19,7 @@
 import Vue from "vue";
 import {Component, Prop} from "vue-di-kit";
 
-@Component({})
+@Component({name: 'tab-component'})
 export class TableComponent {
     @Prop({})
     public name: string;

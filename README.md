@@ -3,9 +3,8 @@
 [![NPM Version](http://img.shields.io/npm/v/vue-di-loader.svg?style=flat)](https://www.npmjs.org/package/vue-di-loader)
 [![NPM Downloads](https://img.shields.io/npm/dm/vue-di-loader.svg?style=flat)](https://npmcharts.com/compare/vue-di-loader?minimal=true)
 
-A Webpack loader the automatically injects child components into parent components during webpack compiling/transpiling.<br/>
-`vue-di-loader` works with single file components (**SFC**) scanning the template section for component tags and then injects
-them into the code and transpiles them in to javascript during the webpack loading process.<br/>
+A Webpack loader the automatically injects child components into apps and parent components during webpack compiling/transpiling.<br/>
+`vue-di-loader` works with single file components (**SFC**) that have their script sections written in **TypeScript**.  By scanning the template section for component tags and then injects them into the code and transpiles them in to javascript during the webpack loading process.<br/>
 
 This simplifies the web development process, and leaves code more elegant.<br/><br/>
 
@@ -309,6 +308,39 @@ new VueDIPlugin({
 })
 ```
 <br/>Note that it is not mandatory to use the `VueDIPlugin`.  The developer is always free to put the imports and the component injection in his/her code.  This may be preferrable if multiple `Vue` instances are used in the web app.  In the future the `VueDIPlugin` and `vue-di-loader` may be updated to target specific `Vue` instances for injection.<br/><br/>
+
+**NOTES**<br/>
+
+**@Component Decorator Usage**<br/>
+When using the `@Component` decorator with options, `vue-di-loader` check to see if the `name` property is specified.<br/>
+```typescript
+@Component({name: 'pic'})
+export default class PictureComponent extends Vue { ... }
+```
+What ever is specified in the `name` property will be set as the component's tag name.  If the `name` property is not specified, then `vue-di-loader` will take the kebab format of the class name and set that as the component tag name ('`picture-component`' in the example above).<br/>
+
+Be sure to use a string literal when assigning the name. The string literals can be in single quotes, double quotes and back ticks.<br/>
+```typescript
+@Component({name: 'component-name'})
+// or
+@Component({name: "component-name"})
+// or
+@Component({name: `component-name`})
+```
+
+passing in a variable as the name will **not** be picked up by `vue-di-loader`:
+```typescript
+let name = 'component-name'
+@Component({name: name})
+export default class PictureComponent extends Vue { ... }
+```
+
+<br/>passing in a formatted string expression as the name will **not** be recognized as an expression by `vue-di-loader`; and the expression itself will be passed in as the component name.
+```typescript
+@Component({name: `${service.getName('picture')}-component`})
+export default class PictureComponent extends Vue { ... }
+```
+`vue-di-loader` uses an [Abstract Syntax Tree](https://www.npmjs.com/package/ts-simple-ast) to identify the `name` property in the `@Component` decorator option.  `vue-di-loader` can see the code, but it will not evaluate the code (like it would be done by the app during runtime).  Therefore, it can only extract string literals and inject them as the component name.<br/><br/>
 
 ## Installation
 Do the following steps to install **vue-di-loader**:

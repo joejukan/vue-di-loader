@@ -21,6 +21,7 @@ const REGEX_END_QUOTE = /(?:\"|\')$/gm;
 const REGEX_RENDER = /(?:\'|\")\%\%\%RENDER\%\%\%(?:\'|\")/i;
 const REGEX_STATIC_RENDER = /(?:\'|\")\%\%\%STATICRENDER\%\%\%(?:\'|\")/i;
 const REGEX_COMPONENTS = /(?:\'|\")\%\%\%COMPONENTS\%\%\%(?:\'|\")/i;
+const REGEX_EXTRACT_STRING = /^\s*[\'\"\`](.*)[\'\"\`]\s*$/;
 
 
 export class ASTClass extends AST{
@@ -70,13 +71,14 @@ export class ASTClass extends AST{
 
     private processScript() {
         let source = this.source = this.createSourceFile(this.name);
-        source.insertText(0, this.typescript)
+        source.insertText(0, this.typescript);
+        let parser = new ASTParser(source);
         let classes = source.getClasses();
         let template = this.template;
 
         for(let i = classes.length - 1; i >= 0 ; i--){
             let cls = classes[i];
-
+            let symbol = cls.getName();
             // handle decorator
             let decorator = cls.getDecorator(dec => {
                 let name = dec.getName();
@@ -92,18 +94,19 @@ export class ASTClass extends AST{
                 }
 
                 let args = decorator.getArguments();
-                let arg = (args.length > 0 ? args[0] : undefined);
-                if(!arg){
-                    decorator.addArgument("{}");
-                    arg = decorator.getArguments()[0];
+                let arg = <ObjectLiteralExpression> (args.length > 0 ? args[0] : decorator.addArgument("{}"));
+                let componentName: string;
+                let literal = parser.get('name', arg, SyntaxKind.StringLiteral);
+                    
+                if(literal) {
+                    let parts = REGEX_EXTRACT_STRING.exec(literal.getText());
+                    if(parts && parts.length > 1){
+                        componentName = parts[1];
+                    }
                 }
-
-                let options = <ComponentOptions<any>> {};
-                eval(`options = ${arg.getText()}`);
-                
-                if(!options.name){
-                    options.name = kebab(cls.getName());
-                }
+                else{
+                    componentName = kebab(symbol);
+                } 
 
                 let renders = compiler.compileToFunctions(preCompile(this.template));
 
@@ -119,7 +122,6 @@ export class ASTClass extends AST{
 
                 staticStrings += " ]";
                 let imports = new Array<DependencyClass>();
-
                 
                 // imports
                 for(var k in dependencies){
@@ -127,7 +129,7 @@ export class ASTClass extends AST{
                     let name = dependency.name;
                     let symbol = dependency.symbol;
 
-                    if(name != options.name){
+                    if(name !== componentName){
                         let dom = new DOMParser();
                         let doc = dom.parseFromString(template, 'text/xml').documentElement;
                         let elements = doc.getElementsByTagName(dependency.name)
@@ -150,51 +152,37 @@ export class ASTClass extends AST{
                         }
                     ]
                 })
-
+                
                 source.insertFunction(0, {
                     name: RENDER_NAME,
                     bodyText: functionString(renders.render)
                 })
-
-                let componentString = "{\n";
-                for(let j = 0; j < imports.length; j++){
-                    let imp = imports[j];
-                    if(j > 0)
-                        componentString += ",\n";
-
-                    componentString += `'${imp.name}': ${imp.symbol}`;
-                }
-
-                componentString += "\n}"
-
-                source.insertVariableStatement(0, {
+                
+                
+                let componentsDec = source.insertVariableStatement(0, {
                     declarationKind: VariableDeclarationKind.Const,
                     declarations: [
                         {
                             name: COMPONENTS_NAME,
-                            initializer: (imports.length > 0 ? componentString : "{}")
+                            initializer: "{}"
                         }
                     ]
-                });
+                }).getDeclarations()[0];
+
+                let components = componentsDec.getFirstChildByKind(SyntaxKind.ObjectLiteralExpression);
+                imports.forEach(imp => {
+                    components.addPropertyAssignment({name: `'${imp.name}'`, initializer: imp.symbol})
+                })
 
                 for(let j = 0; j < imports.length; j++){
                     let imp = imports[j];
                     source.insertImportDeclaration(0, this.toImportDeclaration(imp));
                 }
-                
-                options.render = <any> "%%%RENDER%%%";
-                options.staticRenderFns = <any> "%%%STATICRENDER%%%";
-                options.components = <any> "%%%COMPONENTS%%%"
 
-                let optionString = JSON.stringify(options);
-                optionString = optionString.replace(REGEX_KEY, key => {
-                    return key.replace(REGEX_BEGIN_QUOTE, " ").replace(REGEX_END_QUOTE, "");
-                })
-
-                optionString = optionString.replace(REGEX_RENDER, ` ${RENDER_NAME} `);
-                optionString = optionString.replace(REGEX_STATIC_RENDER, ` ${STATIC_RENDER_NAME} `);
-                optionString = optionString.replace(REGEX_COMPONENTS, ` ${COMPONENTS_NAME} `);
-                arg.replaceWithText(optionString);
+                // TODO: check if components already existing
+                arg.addPropertyAssignment({name: 'render', initializer: RENDER_NAME});
+                arg.addPropertyAssignment({name: 'staticRenderFns', initializer: STATIC_RENDER_NAME});
+                arg.addPropertyAssignment({name: 'components', initializer: COMPONENTS_NAME});
             }
         }
         try{
@@ -235,32 +223,44 @@ export class ASTClass extends AST{
         content = "<source>" + content + "</source>";
         let source = this.createSourceFile(`${uuid()}.ts`);
         source.insertText(0, content);
-
+        let parser = new ASTParser(source);
         let classes = source.getClasses();
 
         for(let i = 0; i < classes.length; i++){
             let cls = classes[i];
+            let symbol = cls.getName();
             let decorators = cls.getDecorators();
-
+            
             for(let j = 0; j < decorators.length; j++){
                 let decorator = decorators[j];
 
                 if(decorator.getName() === "Component"){
-                    let args = decorator.getArguments() || [];
-                    let opts: string = (args.length > 0 ? args[0].getText() : "{}");
-                    let options = <any> {};
-                    eval(`options = ${opts}`);
-                    let name = undefined;
-                    let symbol = cls.getName();
-                    if(options.name){
-                        name = options.name;
+                    let args = decorator.getArguments();
+                    let arg: ObjectLiteralExpression;
+                    if(!Array.isArray(args) || args.length === 0){
+                        arg = <ObjectLiteralExpression> decorator.addArgument("{}")
+                    }
+                    else{
+                        arg = <ObjectLiteralExpression> args[0];
+                    }
+                    let name:string = undefined;
+                    
+                    let literal = parser.get('name', arg, SyntaxKind.StringLiteral);
+                    
+                    if(literal) {
+                        let parts = REGEX_EXTRACT_STRING.exec(literal.getText());
+                        if(parts && parts.length > 1){
+                            name = parts[1];
+                        }
                     }
                     else{
                         name = kebab(symbol);
+                    }                    
+                    
+                    if(name){
+                        dependencies[name] = new DependencyClass(name, symbol, path, cls.isDefaultExport());
+                        return;
                     }
-
-                    dependencies[name] = new DependencyClass(name, symbol, path, cls.isDefaultExport());
-                    return;
                 }
             }
         }

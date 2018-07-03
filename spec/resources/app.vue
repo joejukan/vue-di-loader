@@ -1,5 +1,5 @@
 <template>
-   <table-component />
+   <tab-component />
 </template>
 
 <script lang="ts">
