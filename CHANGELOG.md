@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
 
+## [0.0.9] - 2018-07-15
+* updated unit test helper to reflect class changes.
+
 ## [0.0.8] - 2018-07-15
 * updated `README.md` to include documentation on how `vue-di-loader` supports `file-loader` and `node-sass` configuration.
 * updated `package.json` to include the [node-sass](https://www.npmjs.com/package/node-sass) package.

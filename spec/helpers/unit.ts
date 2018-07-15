@@ -34,7 +34,7 @@ export class Unit {
     
     public get style(): string{
         if(this.ast){
-            return this.ast.style;
+            return this.ast.style.content;
         }
     }
 
