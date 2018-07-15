@@ -1,10 +1,11 @@
 import { Plugin, Compiler, compilation, Entry, EntryFunc } from "webpack";
-import {resolve, sep} from "path";
+import {resolve, sep, relative} from "path";
+import {normalize} from "upath";
 import {statSync, readdirSync} from "fs";
 import { Argumenter } from "@joejukan/argumenter";
 import { access, kebab } from "@joejukan/web-kit";
 import { PluginOptions } from "../abstraction";
-import { configuration, dependencies } from "../globalization";
+import { configuration, dependencies, sass } from "../globalization";
 import { DependencyClass, ASTClass } from ".";
 import { log } from "../function";
 
@@ -61,6 +62,23 @@ export class VueDIPlugin implements Plugin {
             else if(typeof entries === 'string'){
                 configuration.entries.push(resolve(entries));
             }
+
+            if(access(this, 'options.loaders.file')){
+                let path = this.options.loaders.file.path;
+
+                if(Array.isArray(path)){
+                    path.forEach( path => this.fileLoader(path) );
+                }
+                else if(typeof path === 'string'){
+                    this.fileLoader(path);
+                }
+            }
+
+            if(access(this, 'options.loaders.sass')){
+                let paths = this.options.loaders.sass.path || [];
+                paths.forEach( path => sass.path.push(path))
+            }
+
             for(let k in dependencies){
                 this.log(`identified dependency: ${k}`)
             }
@@ -118,6 +136,29 @@ export class VueDIPlugin implements Plugin {
 
     public entry(path: string){
         path = resolve(path);
+    }
+
+    public fileLoader(path: string){
+        if(typeof path !== 'string'){
+            return;
+        }
+
+        path = resolve(path);
+        let files = readdirSync(path);
+        
+        files.forEach(file => {
+            let filePath = `${path}${sep}${file}`;
+            let stats = statSync(filePath);
+
+            if(stats.isDirectory()){
+                this.fileLoader(filePath);
+            }
+            else if(stats.isFile()){
+                configuration.entries.forEach( entry => {
+                    
+                })
+            }
+        })
     }
 
     public log(value: any){

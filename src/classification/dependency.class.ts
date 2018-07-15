@@ -1,6 +1,7 @@
 import {posix} from "path";
 import {normalize} from "upath";
 import { Argumenter } from "@joejukan/argumenter";
+import { DependencyType } from "../enumeration";
 
 const REGEX_VUE = /\.vue$/i;
 export class DependencyClass {
@@ -8,6 +9,7 @@ export class DependencyClass {
     public path: string;
     public symbol: string;
     public defaulted: boolean;
+    public type: DependencyType;
 
     public constructor();
     public constructor(name: string);
@@ -15,12 +17,14 @@ export class DependencyClass {
     public constructor(name: string, symbol: string);
     public constructor(name: string, symbol: string, defaulted: boolean);
     public constructor(name: string, symbol: string, path: string);
+    public constructor(name: string, symbol: string, path: string, type: DependencyType);
     public constructor(name: string, symbol: string, path: string, defaulted: boolean);
     public constructor(...args){
         let argue = new Argumenter(args);
         this.name = argue.string;
         this.symbol = argue.string;
         this.path = argue.string;
+        this.type = argue.number || DependencyType.VUE;
         this.defaulted = argue.boolean || false;
     }
 
@@ -29,7 +33,8 @@ export class DependencyClass {
         let to = normalize(this.path);
         let p = posix.relative(from, to);
 
-        if(p.match(REGEX_VUE)){
+        // TODO: evaluate if module
+        if(p.match(REGEX_VUE) && !p.match(/^\.+\//)){
             p = `./${p}`;
         }
 

@@ -8,5 +8,14 @@ export interface PluginOptions  {
         entry?: string | string []
         deep?: boolean;
         path?: string | string []
+    },
+    loaders?: {
+        file?: {
+            path: string | string[];
+            type: string [];
+        },
+        sass?: {
+            path: string[];
+        }
     }
 } 

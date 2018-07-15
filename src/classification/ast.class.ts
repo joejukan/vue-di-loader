@@ -1,14 +1,14 @@
 import { DependencyClass, ASTParser } from '../classification';
-import { dependencies } from "../globalization";
+import { dependencies, sass } from "../globalization";
 import {basename, extname} from "path";
-import {DOMParser, XMLSerializer} from "xmldom";
+import {DOMParser} from "xmldom";
 import * as compiler from "vue-template-compiler";
-import Vue, {ComponentOptions, DirectiveOptions, ComputedOptions} from "vue";
+import { renderSync } from "node-sass";
+
 import {readFileSync as read} from "fs";
-import AST, {SourceFile, Node, VariableDeclarationKind, ImportDeclarationStructure, SyntaxKind, NewExpression, 
-    SyntaxList, PropertyAssignment, ObjectLiteralExpression} from "ts-simple-ast";
-import {transpile, CompilerOptions, ModuleResolutionKind, ModuleKind} from "typescript";
-import { preCompile, functionString, log } from '../.';
+import AST, {SourceFile, VariableDeclarationKind, ImportDeclarationStructure, SyntaxKind, NewExpression, ObjectLiteralExpression, ClassDeclaration, MethodDeclaration, IndentStyle, Scope} from "ts-simple-ast";
+import {transpile, ModuleResolutionKind, ModuleKind} from "typescript";
+import { preCompile, functionString, log, DependencyType } from '../.';
 import { Argumenter } from '@joejukan/argumenter';
 import { kebab, uuid } from '@joejukan/web-kit';
 
@@ -28,7 +28,7 @@ export class ASTClass extends AST{
     public typescript: string;
     public javascript: string;
     public template: string;
-    public style: string;
+    public style: SFCBlock;
     public sfc: SFCDescriptor;
     public path: string;
 
@@ -59,11 +59,13 @@ export class ASTClass extends AST{
             moduleSpecifier: dependency.relative(this.path)
         };
 
-        if (dependency.defaulted) {
-            declaration.defaultImport = dependency.symbol;
-        }
-        else {
-            declaration.namedImports = [{ name: dependency.symbol }];
+        if(dependency.type === DependencyType.VUE){
+            if (dependency.defaulted) {
+                declaration.defaultImport = dependency.symbol;
+            }
+            else {
+                declaration.namedImports = [{ name: dependency.symbol }];
+            }
         }
 
         return declaration;
@@ -131,12 +133,13 @@ export class ASTClass extends AST{
 
                     if(name !== componentName){
                         let dom = new DOMParser();
-                        let doc = dom.parseFromString(template, 'text/xml').documentElement;
-                        let elements = doc.getElementsByTagName(dependency.name)
-                        if(elements.length > 0){
-                            imports.push(dependency);
+                        let doc = dom.parseFromString(template, 'text/xml');
+                        if(doc){
+                           let elements = doc.getElementsByTagName(dependency.name)
+                            if(elements.length > 0){
+                                imports.push(dependency);
+                            } 
                         }
-
                     }
                     
                 }
@@ -183,6 +186,8 @@ export class ASTClass extends AST{
                 arg.addPropertyAssignment({name: 'render', initializer: RENDER_NAME});
                 arg.addPropertyAssignment({name: 'staticRenderFns', initializer: STATIC_RENDER_NAME});
                 arg.addPropertyAssignment({name: 'components', initializer: COMPONENTS_NAME});
+
+                this.mounted(cls);
             }
         }
         try{
@@ -198,9 +203,9 @@ export class ASTClass extends AST{
     public load(content: string){
         let sfc = this.sfc = compiler.parseComponent(content);
         this.typescript = sfc.script.content;
-        this.template = `<div>${sfc.template.content}</div>`;
+        this.template = sfc.template.content;
         if(sfc.styles.length > 0){
-            this.style = sfc.styles[0].content;
+            this.style = sfc.styles[0];
         }
 
         this.processScript();
@@ -328,10 +333,62 @@ export class ASTClass extends AST{
         for(let k in dependencies){
             let dependency = dependencies[k];
             source.addImportDeclaration(this.toImportDeclaration(dependency));
-            components.addPropertyAssignment({ name: `'${dependency.name}'`, initializer: dependency.symbol})
+            if(dependency.type === DependencyType.VUE){
+                components.addPropertyAssignment({ name: `'${dependency.name}'`, initializer: dependency.symbol})
+            }
         }
+        
         source.organizeImports();
         this.typescript = source.getText();
         this.log(`after injection in (${this.path}):\n${this.typescript}`);
+    }
+
+    public mounted(cls: ClassDeclaration) {
+        if(this.style){
+            // TODO: add business logic to search for @BeforeCreate when decorators are supported in vue-di-kit.
+            let method = cls.getMethod('mounted');
+
+            if(method){
+                let body = method.getBody();
+                let text = undefined;
+                if(body){
+                    let content = body.getLastChildByKind(SyntaxKind.SyntaxList);
+                    if(content){
+                        text = content.getText();
+                    }
+                }
+                this.codeStyleInjections(method, text);
+            }
+            else {
+                method = cls.addMethod({name: 'mounted', scope: Scope.Public});
+                this.codeStyleInjections(method);
+            }
+        }
+    }
+
+    private codeStyleInjections(method: MethodDeclaration, suffix?: string){
+        if(this.style){
+            let id = `_style_di_${Math.floor( 10 + 100000*Math.random())}`;
+            let css = renderSync({
+                data: this.style.content,
+                includePaths: sass.path
+            }).css.toString();
+            let text = '/* auto generated DI code for styles */\n';
+
+            text += `let ${id} = document.createElement( 'style' );\n`;
+            text += `${id}.appendChild( document.createTextNode( \`${css.replace(/\n/g, ' ').replace(/\s{2,}/g, ' ').trim()}\` ) );\n`;
+            text += `this.$el.appendChild( ${id} );\n`;
+            if(suffix){
+                text += '\n/* appended code from previous method implementation */\n'
+                text += suffix;
+            }
+            method.setBodyText(text);
+            method.formatText({indentStyle: IndentStyle.Smart});
+        }
+    }
+
+    public addFile(path: string){
+        // TODO: consider HOT loading
+        dependencies[uuid()] = new DependencyClass(basename(path), extname(path), path, DependencyType.FILE);
     }
 }

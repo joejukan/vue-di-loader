@@ -7,6 +7,9 @@ describe(`webpack plugin tests`, () => {
         let ast = new ASTClass(path);
         ast.pitch(resolve("spec/resources/app.vue"));
         ast.pitch(resolve("spec/resources/table.vue"));
+        ast.pitch(resolve("spec/resources/common/login.vue"));
+        ast.pitch(resolve("spec/external/navigation.vue"));
+        ast.addFile(resolve("spec/assets/images/logo.png"))
 
         ast.inject(readFileSync(path, 'utf-8'));
     })

@@ -39,6 +39,7 @@
     "loader-utils": "1.1.0",
     "schema-utils": "0.4.5",
     "ts-simple-ast": "12.4.0",
+    "node-sass": "4.9.2",
     "upath": "1.1.0",
     "xmldom": "0.1.27",
     "vue": "2.5.16",
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@types/webpack": "4.4.4",
     "@types/node": "10.3.5",
+    "@types/node-sass": "3.10.32",
     "typescript": "2.9.2",
     "@types/jasmine": "2.8.8",
     "jasmine-ts": "0.2.1",

@@ -200,7 +200,7 @@ module.exports = {
         test: /\.(png|jpg|gif|svg)$/,
         loader: 'file-loader',
         options: {
-          name: '[name].[ext]?[hash]'
+          name: 'assets/images/[name].[ext]?[hash]'
         }
       },
       {
@@ -208,12 +208,13 @@ module.exports = {
         use: [
             { loader: 'style-loader' },
             { loader: 'css-loader' },
-            { loader: 'sass-loader' }
+            { 
+                loader: 'sass-loader',
+                options: {
+                    includePaths: [ resolve('assets/scss') ]
+                } 
+            }
         ]
-      },
-      {
-        test: /\.svg$/,
-        loader: 'svg-sprite-loader'
       }
     ]
   },
@@ -231,6 +232,14 @@ module.exports = {
       components: {
         deep: true,
         path: resolve('./src/components')
+      },
+      loaders: {
+          file: {
+              path: resolve('./assets/images')
+          },
+          sass: {
+              path: resolve('./assets/scss')
+          }
       }
     })
   ],
@@ -252,17 +261,12 @@ module.exports = {
 ```
 <br/>The `entry` option can either be string pointing to a file or an array of strings pointing to multiple files.<br/>
 
-The module rule for single file components is where the `vue-di-loader` must be specified.  Optional loaders to handle scss/sass can be specified:
+The module rule for single file components is where the `vue-di-loader` must be specified:
 ```javascript
 {
     test: /\.vue$/,
     loader: 'vue-di-loader',
-    options: {
-        loaders: {
-        'scss': 'style-loader!css-loader!sass-loader',
-        'sass': 'style-loader!css-loader!sass-loader?indentedSyntax'
-        }
-    }
+    options: {}
 }
 ```
 
@@ -304,6 +308,20 @@ new VueDIPlugin({
         /* The path or paths to search for SFC.  can be a string or an array of strings. 
         it is recommended to use the resolve function from the path library.*/
         path: resolve('./src/components')
+    },
+    // configure vue-di-loader to inject imports in support of other loaders
+    loaders: {
+        // configure vue-di-loader to inject imports in support of the webpack file-loader
+        file: {
+            /* instruct vue-di-loader to inject import statements for all files specified under the directory path
+             into the chunk emitted from the entry ts file.*/
+            path: resolve('./assets/images')
+        },
+        // configure vue-di-loader on how to facilitate the processing of the contents of the <script> tag in the vue files.
+        sass: {
+            /* instruct vue-di-loader to include scss files found in the directories specified below */
+            path: [resolve('./assets/scss')]
+        }
     }
 })
 ```
@@ -311,7 +329,7 @@ new VueDIPlugin({
 
 **NOTES**<br/>
 
-**@Component Decorator Usage**<br/>
+**Component Decorator Usage**<br/>
 When using the `@Component` decorator with options, `vue-di-loader` check to see if the `name` property is specified.<br/>
 ```typescript
 @Component({name: 'pic'})
@@ -340,7 +358,11 @@ export default class PictureComponent extends Vue { ... }
 @Component({name: `${service.getName('picture')}-component`})
 export default class PictureComponent extends Vue { ... }
 ```
-`vue-di-loader` uses an [Abstract Syntax Tree](https://www.npmjs.com/package/ts-simple-ast) to identify the `name` property in the `@Component` decorator option.  `vue-di-loader` can see the code, but it will not evaluate the code (like it would be done by the app during runtime).  Therefore, it can only extract string literals and inject them as the component name.<br/><br/>
+`vue-di-loader` uses an [Abstract Syntax Tree](https://www.npmjs.com/package/ts-simple-ast) to identify the `name` property in the `@Component` decorator option.  `vue-di-loader` can see the code, but it will not evaluate the code (like it would be done by the app during runtime).  Therefore, it can only extract string literals and inject them as the component name.<br/>
+
+**Script Section in VUE file**<br/>
+The `vue-di-loader` uses [node-sass](https://www.npmjs.com/package/node-sass) to process the contents between the `<script>` tag in the `.vue` file.  The `vue-di-loader` then instructs the component to inject the `<script>` tag into its main HTML element.<br/>
+The `VueDIPlugin` provides a means to specify `scss` files to include during the processing of `<script>` tag; making it possible to use variables, that are defined in these external `scss` files, inside the `<script>` tag.
 
 ## Installation
 Do the following steps to install **vue-di-loader**:

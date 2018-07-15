@@ -10,3 +10,5 @@ export let configuration: {
     deep: true,
     entries: new Array<string>()
 };
+
+export let sass: { path: string[] } = { path: [] }

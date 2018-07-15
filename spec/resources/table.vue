@@ -23,6 +23,10 @@ import {Component, Prop} from "vue-di-kit";
 export class TableComponent {
     @Prop({})
     public name: string;
+
+    public mounted() {
+        Object.defineProperty(this, '_test', { value: 25})
+    }
 }
 </script>
 
@@ -30,12 +34,12 @@ export class TableComponent {
     $primaryColor: #eeccff;
 
     body {
-    $primaryColor: #ccc !global;
-    background: $primaryColor;
+        color: #ccc;
+        background: $primaryColor;
     }
 
     p {
-    color: $primaryColor;
+        color: $primaryColor;
     }
 
 </style>

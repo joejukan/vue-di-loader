@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
 
+## [0.0.8] - 2018-07-15
+* updated `README.md` to include documentation on how `vue-di-loader` supports `file-loader` and `node-sass` configuration.
+* updated `package.json` to include the [node-sass](https://www.npmjs.com/package/node-sass) package.
+* updated unit tests to include file imports and vue dependency injection from different directory levels.
+* updated `VueDIPlugin` options to include properties for `file-loader` and `node-sass`.
+* updated `VueDIPlugin` class to support imports for `file-loader` and to specify include paths for `node-sass`.
+* updated `ASTClass` to support processing the contents of the `<script>` tag in the SFC files.
+* updated `DependencyClass` to support a `type` field to distinguish between a `.vue` file dependency and a regular file dependency.
+* added `DependencyType` enumeration that defines a `VUE` file type and `FILE` regular file type.
+* added `sass` global variable that defines a `path` array string property.
+
 ## [0.0.7] - 2018-07-03
 * updated readme documentation to provide details on functionality and usage.
 * added `ASTParser` class.
