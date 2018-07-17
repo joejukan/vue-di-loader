@@ -1,6 +1,6 @@
 import { Plugin, Compiler, compilation, Entry, EntryFunc } from "webpack";
 import {resolve, sep, relative} from "path";
-import {normalize} from "upath";
+import {normalize, basename} from "upath";
 import {statSync, readdirSync} from "fs";
 import { Argumenter } from "@joejukan/argumenter";
 import { access, kebab } from "@joejukan/web-kit";
@@ -29,7 +29,20 @@ export class VueDIPlugin implements Plugin {
     }
     public apply(compiler: Compiler){
         compiler.hooks.beforeCompile.tap('VueDIPlugin', (compilation) => {
+            if(configuration.applied){
+                return;
+            }
+            else {
+                configuration.applied = true;
+            }
+
             this.log('beforeCompile');
+
+            // set dom parsing.
+            if(access(this, 'options.parsers.dom')){
+                configuration.domParsing = this.options.parsers.dom;
+            }
+
             // inject external pre-compiled components.
             if(access(this, 'options.externals')){
                 this.external();
@@ -139,6 +152,8 @@ export class VueDIPlugin implements Plugin {
     }
 
     public fileLoader(path: string){
+        let types: Array<string> = access(this, 'options.loaders.file.type') || [];
+
         if(typeof path !== 'string'){
             return;
         }
@@ -154,9 +169,17 @@ export class VueDIPlugin implements Plugin {
                 this.fileLoader(filePath);
             }
             else if(stats.isFile()){
-                configuration.entries.forEach( entry => {
-                    
-                })
+                if(Array.isArray(types) && types.length > 0){
+                    types.forEach(type => {
+                        if(new RegExp(`${type}$`).test(basename(filePath))){
+                            ASTClass.addFile(filePath);
+                            return;
+                        }
+                    })
+                }
+                else{
+                    ASTClass.addFile(filePath);
+                }
             }
         })
     }

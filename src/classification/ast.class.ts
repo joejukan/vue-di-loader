@@ -1,5 +1,5 @@
 import { DependencyClass, ASTParser } from '../classification';
-import { dependencies, sass } from "../globalization";
+import { dependencies, sass, configuration } from "../globalization";
 import {basename, extname} from "path";
 import {DOMParser} from "xmldom";
 import * as compiler from "vue-template-compiler";
@@ -132,16 +132,24 @@ export class ASTClass extends AST{
                     let symbol = dependency.symbol;
 
                     if(name !== componentName){
-                        let dom = new DOMParser();
-                        let doc = dom.parseFromString(template, 'text/xml');
-                        if(doc){
-                           let elements = doc.getElementsByTagName(dependency.name)
-                            if(elements.length > 0){
+
+                        if(configuration.domParsing){
+                            let dom = new DOMParser();
+                            let doc = dom.parseFromString(template, 'text/html');
+                            if(doc){
+                            let elements = doc.getElementsByTagName(dependency.name)
+                                if(elements.length > 0){
+                                    imports.push(dependency);
+                                } 
+                            }
+                        }
+                        else{
+                            let regexp = new RegExp(`\\<\\s*${name.replace(/\-/, '\\-')}[\\s\\/\\>]+`, 'mi');
+                            if(regexp.test(template)){
                                 imports.push(dependency);
-                            } 
+                            }
                         }
                     }
-                    
                 }
 
                 // template variable
@@ -205,7 +213,8 @@ export class ASTClass extends AST{
         this.typescript = sfc.script.content;
         this.template = sfc.template.content;
         if(sfc.styles.length > 0){
-            this.style = sfc.styles[0];
+            let style = sfc.styles[0];
+            this.style = (style.content ? style : undefined);
         }
 
         this.processScript();
@@ -345,39 +354,44 @@ export class ASTClass extends AST{
 
     public mounted(cls: ClassDeclaration) {
         if(this.style){
-            // TODO: add business logic to search for @BeforeCreate when decorators are supported in vue-di-kit.
-            let method = cls.getMethod('mounted');
-
-            if(method){
-                let body = method.getBody();
-                let text = undefined;
-                if(body){
-                    let content = body.getLastChildByKind(SyntaxKind.SyntaxList);
-                    if(content){
-                        text = content.getText();
+            // TODO: add business logic to search for @Mounted and @Updated when decorators are supported in vue-di-kit.
+            ['created', 'mounted', 'updated'].forEach( name => {
+                let method = cls.getMethod(name);
+                if(method){
+                    let body = method.getBody();
+                    let text = undefined;
+                    if(body){
+                        let content = body.getLastChildByKind(SyntaxKind.SyntaxList);
+                        if(content){
+                            text = content.getText();
+                        }
                     }
+                    this.codeEventMethods(method, text);
                 }
-                this.codeStyleInjections(method, text);
-            }
-            else {
-                method = cls.addMethod({name: 'mounted', scope: Scope.Public});
-                this.codeStyleInjections(method);
-            }
+                else {
+                    method = cls.addMethod({name, scope: Scope.Public});
+                    this.codeEventMethods(method);
+                }
+            })
         }
     }
 
-    private codeStyleInjections(method: MethodDeclaration, suffix?: string){
+    private codeEventMethods(method: MethodDeclaration, suffix?: string){
+        switch(method.getName()){
+            case 'created': this.codeCreateMethod(method, suffix); break;
+            case 'mounted':
+            case 'updated':
+                this.codeMountedUpdatedMethods(method, suffix); break;
+        }
+    }
+    private codeMountedUpdatedMethods(method: MethodDeclaration, suffix?: string){
         if(this.style){
-            let id = `_style_di_${Math.floor( 10 + 100000*Math.random())}`;
-            let css = renderSync({
-                data: this.style.content,
-                includePaths: sass.path
-            }).css.toString();
-            let text = '/* auto generated DI code for styles */\n';
+            
+            let text = '/* auto generated code for DI styles */\n';
+            text += `if(this.$el.nodeType == 1 && !this.$DI.styled && this.$DI.style){\n`;
+            text += `this.$el.appendChild( this.$DI.style );\n`;
+            text += `}\n`;
 
-            text += `let ${id} = document.createElement( 'style' );\n`;
-            text += `${id}.appendChild( document.createTextNode( \`${css.replace(/\n/g, ' ').replace(/\s{2,}/g, ' ').trim()}\` ) );\n`;
-            text += `this.$el.appendChild( ${id} );\n`;
             if(suffix){
                 text += '\n/* appended code from previous method implementation */\n'
                 text += suffix;
@@ -387,7 +401,34 @@ export class ASTClass extends AST{
         }
     }
 
+    private codeCreateMethod(method: MethodDeclaration, suffix?: string){
+        let text = '/* auto generated code for DI object */\n';
+        text += `this.$DI = { style: undefined };\n`;
+        if(this.style){
+            let id = `_style_di_${Math.floor( 10 + 100000*Math.random())}`;
+            let css = renderSync({data: this.style.content, includePaths: sass.path}).css.toString();
+            text += `let ${id} = document.createElement( 'style' );\n`;
+            text += `${id}.appendChild( document.createTextNode( \`${css.replace(/\n/g, ' ').replace(/\s{2,}/g, ' ').trim()}\` ) );\n`;
+            text += `${id}.setAttribute('id','${id}');\n`;
+            if(this.style.scoped){
+                text += `${id}.setAttribute('scoped', '');\n`
+            }
+            text += `this.$DI.style = ${id};\n`;
+            text += `Object.defineProperty(this.$DI, 'styled', { enumerable: true, get: () =>( document.getElementById('${id}') ? true : false) } );\n`;
+            
+        }
+        
+        if(suffix){
+            text += '\n/* appended code from previous method implementation */\n'
+            text += suffix;
+        }
+        method.setBodyText(text);
+        method.formatText({indentStyle: IndentStyle.Smart});
+    }
     public addFile(path: string){
+        ASTClass.addFile(path);
+    }
+    public static addFile(path: string){
         // TODO: consider HOT loading
         dependencies[uuid()] = new DependencyClass(basename(path), extname(path), path, DependencyType.FILE);
     }

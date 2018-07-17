@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
 
+## [0.1.0] - 2018-07-17
+* updated `README.md` to describe the `VueDIPlugin` options in detail.
+* added [moment](https://www.npmjs.com/package/moment) dependency to `package.json`.
+* added timestamp to logging.
+* added data model (`Configuration` interface) for global `configuration` object.
+* added regular expression mechanism to search for SFC references inside the `<template>` tags.
+* updated css injection to use the vue `created`, `mounted` and `updated` lifecycle events to inject `<style>` tags into dom.
+
 ## [0.0.9] - 2018-07-15
 * updated unit test helper to reflect class changes.
 

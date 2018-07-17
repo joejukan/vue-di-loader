@@ -44,9 +44,11 @@
     "xmldom": "0.1.27",
     "vue": "2.5.16",
     "vue-template-compiler": "2.5.16",
-    "vue-di-kit": "0.0.4"
+    "vue-di-kit": "0.0.4",
+    "moment": "2.22.2"
   },
   "devDependencies": {
+    "@types/moment": "2.13.0",
     "@types/webpack": "4.4.4",
     "@types/node": "10.3.5",
     "@types/node-sass": "3.10.32",

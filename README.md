@@ -293,38 +293,62 @@ Note that webpack always starts from the last loader specified in the `use` arra
 The `VueDIPlugin` is primarily used to identify the directory (or files) of the **SFC** to inject into the entry.
 ```javascript
 new VueDIPlugin({
-    // enables or disables debug logs during compilation process
     debug: false,
     components: {
-        /* takes a string or an array of strings.  The property can be used to direct the vue-di-loader where 
-        to inject the SFC imports should the developer desire different typescript files than the one specified 
-        in the webpack entry option. */
         entry: undefined, 
-
-        /* if path is a directory, then this instructs the plugin to check sub directories for 
-        single file components.*/
         deep: true,
-        
-        /* The path or paths to search for SFC.  can be a string or an array of strings. 
-        it is recommended to use the resolve function from the path library.*/
         path: resolve('./src/components')
     },
-    // configure vue-di-loader to inject imports in support of other loaders
     loaders: {
-        // configure vue-di-loader to inject imports in support of the webpack file-loader
         file: {
-            /* instruct vue-di-loader to inject import statements for all files specified under the directory path
-             into the chunk emitted from the entry ts file.*/
             path: resolve('./assets/images')
         },
-        // configure vue-di-loader on how to facilitate the processing of the contents of the <script> tag in the vue files.
         sass: {
-            /* instruct vue-di-loader to include scss files found in the directories specified below */
             path: [resolve('./assets/scss')]
         }
+    },
+    parsers: {
+        dom: false
     }
 })
 ```
+<br/><br/>**VueDIPlugin Options**<br/>
+|Name                        |Type                            |Default Value            |Description                                                                      |
+|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
+|**components**              |**ComponentOptions**            |                         |This defines the component injection configurations.                             |
+|**debug**                   |**boolean**                     |`false`                  |This sets `vue-di-loader` to log in verbose mode, allowing logs during compilation process.|
+|**loaders**                 |**LoaderOptions**               |                         |This defines how `vue-di-loader` injects in support of other webpack loaders.    |
+|**parser**                  |**ParserOptions**               |                         |This defines how the `vue-di-loader` parsers operate.                            |
+
+<br/>**ComponentOptions**<br/>
+|Name                        |Type                            |Default Value            |Description                                                                      |
+|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
+|**entry**                   |**string** or **string[]**      |                         |This defines the path(s) to `typescript` files to direct the `vue-di-loader` to inject the SFC imports. It **should only be used** if the developer desires the injection to be done on typescript files other than the one(s) specified in the webpack entry option.|
+|**path**                    |**string** or **string[]**      |                         |The path or paths to search for single file components. It is recommended to use the resolve function from the path library.|
+|**deep**                    |**boolean**                     |`true`                   |if path is a directory, then this instructs the plugin to check sub directories for single file components.|
+
+<br/>**LoaderOptions**<br/>
+|Name                        |Type                            |Default Value            |Description                                                                      |
+|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
+|**file**                    |**FileLoaderOptions**           |                         |This defines how `vue-di-loader` injects in support of the [file-loader](https://www.npmjs.com/package/file-loader).|
+|**sass**                    |**NodeSassOptions**             |                         |This defines how `vue-di-loader` utilizes the [node-sass](https://www.npmjs.com/package/node-sass) library to process the `<script>` tags.|
+
+<br/>**FileLoaderOptions**<br/>
+|Name                        |Type                            |Default Value            |Description                                                                      |
+|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
+|**path**                    |**string**                      |                         |Instructs `vue-di-loader` where to look for files to inject as import statements into the chunk emitted from the entry `typescript` file.|
+|**type**                    |**string[]**                    |                         |If specified, instructs `vue-di-loader` which file types can be injected as import statemets into the chunk emitted from the entry `typescript` file.|
+
+<br/>**NodeSassOptions**<br/>
+|Name                        |Type                            |Default Value            |Description                                                                      |
+|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
+|**path**                    |**string[]**                    |                         |Instructs `vue-di-loader` where to look for scss files to include during its processing of the contents of the `<script>` tag in the single file componets.|
+
+<br/>**ParserOptions**<br/>
+|Name                        |Type                            |Default Value            |Description                                                                      |
+|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
+|**dom**                     |**boolean**                     |`false`                  |`vue-di-loader` uses regular expressions to search the contents of the `<template>` tag for SFC references.  If this option is enabled, then `vue-di-loader` will us [xmldom](https://www.npmjs.com/package/xmldom) to parse the contents of `<template>` and search for SFC references.|
+
 <br/>Note that it is not mandatory to use the `VueDIPlugin`.  The developer is always free to put the imports and the component injection in his/her code.  This may be preferrable if multiple `Vue` instances are used in the web app.  In the future the `VueDIPlugin` and `vue-di-loader` may be updated to target specific `Vue` instances for injection.<br/><br/>
 
 **NOTES**<br/>
@@ -362,7 +386,12 @@ export default class PictureComponent extends Vue { ... }
 
 **Script Section in VUE file**<br/>
 The `vue-di-loader` uses [node-sass](https://www.npmjs.com/package/node-sass) to process the contents between the `<script>` tag in the `.vue` file.  The `vue-di-loader` then instructs the component to inject the `<script>` tag into its main HTML element.<br/>
-The `VueDIPlugin` provides a means to specify `scss` files to include during the processing of `<script>` tag; making it possible to use variables, that are defined in these external `scss` files, inside the `<script>` tag.
+The `VueDIPlugin` provides a means to specify `scss` files to include during the processing of `<script>` tag; making it possible to use variables, that are defined in these external `scss` files, inside the `<script>` tag.<br/>
+
+**VueDIPlugin ParserOptions.dom Setting**<br/>
+`vue-di-loader` searches the contents of the SFC `<template>` tag for other SFC references.  The found SFC references are then used to make import statements that are injected into the emitted chunk before going to the [ts-loader](https://www.npmjs.com/package/ts-loader).<br/>
+Normally, `vue-di-loader` uses regular expressions in this identification mechanism.  This is preferred since regex searches are quick and relatively reliable.<br/>
+If the `ParserOption.dom` property is set to true, `vue-di-loader` will parse the contents of `<template>` into a [xmldom](https://www.npmjs.com/package/xmldom) document.  It will then use the document's `getElementsByTagName()` method to search for other SFC references in the `<template>`.  This mechanism provides a more strict, but process intensive, search for SFC references.
 
 ## Installation
 Do the following steps to install **vue-di-loader**:
