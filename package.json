@@ -1,6 +1,6 @@
 {
   "name": "vue-di-loader",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "Vue Dependency Injection Webpack Loader",
   "main": "lib/loader",
   "types": "index",
