@@ -3,7 +3,7 @@ import { dependencies, sass, configuration } from "../globalization";
 import {basename, extname} from "path";
 import {DOMParser} from "xmldom";
 import * as compiler from "vue-template-compiler";
-import { renderSync } from "node-sass";
+import { renderSync } from "sass";
 
 import {readFileSync as read} from "fs";
 import AST, {SourceFile, VariableDeclarationKind, ImportDeclarationStructure, SyntaxKind, NewExpression, ObjectLiteralExpression, ClassDeclaration, MethodDeclaration, IndentStyle, Scope} from "ts-simple-ast";

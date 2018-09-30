@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
 
+## [0.2.0] - 2018-09-29
+* updated `package.json` to include the [sass](https://www.npmjs.com/package/sass) package.
+
 ## [0.1.0] - 2018-07-17
 * updated `README.md` to describe the `VueDIPlugin` options in detail.
 * added [moment](https://www.npmjs.com/package/moment) dependency to `package.json`.
