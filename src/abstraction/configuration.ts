@@ -5,4 +5,5 @@ export interface Configuration {
     entries?: string[];
     pitched?: boolean; 
     verbose?: boolean;
+    hot?: boolean;
 }

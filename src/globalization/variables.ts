@@ -8,7 +8,8 @@ export let configuration: Configuration = {
     domParsing: false,
     entries: new Array<string>(),
     pitched: false,
-    verbose: false
+    verbose: false,
+    hot: false
 };
 
 export let sass: { path: string[] } = { path: new Array<string>() }

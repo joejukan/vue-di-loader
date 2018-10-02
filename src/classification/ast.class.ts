@@ -2,11 +2,13 @@ import { DependencyClass, ASTParser } from '../classification';
 import { dependencies, sass, configuration } from "../globalization";
 import {basename, extname} from "path";
 import {DOMParser} from "xmldom";
-import * as compiler from "vue-template-compiler";
+import * as compiler from 'vue-template-compiler';
 import { renderSync } from "sass";
 
 import {readFileSync as read} from "fs";
-import AST, {SourceFile, VariableDeclarationKind, ImportDeclarationStructure, SyntaxKind, NewExpression, ObjectLiteralExpression, ClassDeclaration, MethodDeclaration, IndentStyle, Scope} from "ts-simple-ast";
+import AST, {SourceFile, VariableDeclarationKind, ImportDeclarationStructure, 
+    SyntaxKind, NewExpression, ObjectLiteralExpression, ClassDeclaration, MethodDeclaration, IndentStyle, Scope,
+    IfStatement} from "ts-simple-ast";
 import {transpile, ModuleResolutionKind, ModuleKind} from "typescript";
 import { preCompile, functionString, log, DependencyType } from '../.';
 import { Argumenter } from '@joejukan/argumenter';
@@ -347,9 +349,58 @@ export class ASTClass extends AST{
             }
         }
         
+        if(configuration.hot) {
+            this.injectVueHotReloadApi(source);
+        }
         source.organizeImports();
+        source.formatText({
+            indentSize: 4,
+        });
         this.typescript = source.getText();
         this.log(`after injection in (${this.path}):\n${this.typescript}`);
+    }
+
+    public injectVueHotReloadApi(source: SourceFile) {
+        let records = ``;
+        let renders = ``;
+        let reloads = ``;
+
+        for(let k in dependencies) {
+            let id = uuid();
+            let dependency = dependencies[k];
+            if(dependency.type === DependencyType.VUE) {
+                records += `api.createRecord('${id}', ${dependency.symbol});\n`;
+                renders += `api.rerender('${id}', ${dependency.symbol});\n`;
+                reloads += `api.reload('${id}', ${dependency.symbol});\n`;
+            }
+        }
+        source.insertStatements(0, 'declare let module: any;');
+        source.addImportDeclaration({
+            defaultImport: 'api',
+            moduleSpecifier: 'vue-hot-reload-api',
+        });
+        source.addStatements(`
+        if (module.hot) {
+            api.install(Vue);
+
+            if(!api.compatible) {
+                throw new Error ('vue-hot-reload-api is not compatible with the version of Vue that you are using.');
+            }
+
+            module.hot.accept();
+
+            if (!module.hot.data) {
+
+                ${records}
+            }
+            else {
+                
+                ${renders}
+
+                ${reloads}
+            }
+        }
+        `);
     }
 
     public mounted(cls: ClassDeclaration) {
@@ -378,10 +429,14 @@ export class ASTClass extends AST{
 
     private codeEventMethods(method: MethodDeclaration, suffix?: string){
         switch(method.getName()){
-            case 'created': this.codeCreateMethod(method, suffix); break;
+            case 'created':
+                this.codeCreateMethod(method, suffix);
+                break;
+
             case 'mounted':
             case 'updated':
-                this.codeMountedUpdatedMethods(method, suffix); break;
+                this.codeMountedUpdatedMethods(method, suffix);
+                break;
         }
     }
     private codeMountedUpdatedMethods(method: MethodDeclaration, suffix?: string){
