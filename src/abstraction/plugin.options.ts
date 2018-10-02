@@ -3,7 +3,8 @@ export interface PluginOptions  {
     components?: {
         entry?: string | string []
         deep?: boolean;
-        path?: string | string []
+        path?: string | string [],
+        hot?: boolean
     };
     debug?: boolean;
     externals?: {

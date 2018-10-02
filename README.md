@@ -230,6 +230,7 @@ module.exports = {
     new VueDIPlugin({
       debug: false,
       components: {
+        hot: true,
         deep: true,
         path: resolve('./src/components')
       },
@@ -295,7 +296,8 @@ The `VueDIPlugin` is primarily used to identify the directory (or files) of the 
 new VueDIPlugin({
     debug: false,
     components: {
-        entry: undefined, 
+        entry: undefined,
+        hot: true,
         deep: true,
         path: resolve('./src/components')
     },
@@ -326,6 +328,7 @@ new VueDIPlugin({
 |**entry**                   |**string** or **string[]**      |                         |This defines the path(s) to `typescript` files to direct the `vue-di-loader` to inject the SFC imports. It **should only be used** if the developer desires the injection to be done on typescript files other than the one(s) specified in the webpack entry option.|
 |**path**                    |**string** or **string[]**      |                         |The path or paths to search for single file components. It is recommended to use the resolve function from the path library.|
 |**deep**                    |**boolean**                     |`true`                   |if path is a directory, then this instructs the plugin to check sub directories for single file components.|
+|**hot**                     |**boolean**                     |`false`                  |This enables/disables support for Webpack's HOT reload.                           |
 
 <br/>**LoaderOptions**<br/>
 |Name                        |Type                            |Default Value            |Description                                                                      |

@@ -26,6 +26,10 @@ export class VueDIPlugin implements Plugin {
         if(typeof access(this, 'options.components.deep') === 'boolean'){
             configuration.deep = this.options.components.deep;
         }
+
+        if(typeof access(this, 'options.components.hot') === 'boolean'){
+            configuration.hot = this.options.components.hot;
+        }
     }
     public apply(compiler: Compiler){
         compiler.hooks.beforeCompile.tap('VueDIPlugin', (compilation) => {
