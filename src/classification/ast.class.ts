@@ -198,10 +198,12 @@ export class ASTClass extends AST{
                 arg.addPropertyAssignment({name: 'components', initializer: COMPONENTS_NAME});
 
                 this.mounted(cls);
+                this.injectHMRVue(source, dependencies[componentName]);
             }
         }
         try{
             source.organizeImports();
+            source.formatText({indentSize: 4});
         }
         catch(ex){
         }
@@ -209,7 +211,16 @@ export class ASTClass extends AST{
         this.typescript = source.getText();
     }
 
-
+    public transpile () {
+        this.javascript = transpile(this.typescript, {
+            module: ModuleKind.CommonJS,
+            moduleResolution: ModuleResolutionKind.NodeJs,
+            emitDecoratorMetadata: true,
+            experimentalDecorators: true,
+            allowSyntheticDefaultImports: true,
+            noImplicitUseStrict: true
+        });
+    }
     public load(content: string){
         let sfc = this.sfc = compiler.parseComponent(content);
         this.typescript = sfc.script.content;
@@ -220,15 +231,6 @@ export class ASTClass extends AST{
         }
 
         this.processScript();
-
-        this.javascript = transpile(this.typescript, {
-            module: ModuleKind.CommonJS,
-            moduleResolution: ModuleResolutionKind.NodeJs,
-            emitDecoratorMetadata: true,
-            experimentalDecorators: true,
-            allowSyntheticDefaultImports: true,
-            noImplicitUseStrict: true
-        });
 
         this.log(`loading content from ${this.path}:\n${this.typescript}`)
     }
@@ -349,9 +351,7 @@ export class ASTClass extends AST{
             }
         }
         
-        if(configuration.hot) {
-            this.injectVueHotReloadApi(source);
-        }
+        this.injectHMREntry(source);
         source.organizeImports();
         source.formatText({
             indentSize: 4,
@@ -360,47 +360,26 @@ export class ASTClass extends AST{
         this.log(`after injection in (${this.path}):\n${this.typescript}`);
     }
 
-    public injectVueHotReloadApi(source: SourceFile) {
-        let records = ``;
-        let renders = ``;
-        let reloads = ``;
-
-        for(let k in dependencies) {
-            let id = uuid();
-            let dependency = dependencies[k];
-            if(dependency.type === DependencyType.VUE) {
-                records += `api.createRecord('${id}', ${dependency.symbol});\n`;
-                renders += `api.rerender('${id}', ${dependency.symbol});\n`;
-                reloads += `api.reload('${id}', ${dependency.symbol});\n`;
+    public injectHMREntry(source: SourceFile) {
+        if(configuration.hot) {
+            source.addStatements(`
+            declare let module: any;
+            if(module.hot){
+                module.hot.accept();
             }
+            `);
         }
-        source.insertStatements(0, 'declare let module: any;');
-        source.addImportDeclaration({
-            defaultImport: 'api',
-            moduleSpecifier: 'vue-hot-reload-api',
-        });
-        source.addStatements(`
-        if (module.hot) {
-            api.install(Vue);
-
-            if(!api.compatible) {
-                throw new Error ('vue-hot-reload-api is not compatible with the version of Vue that you are using.');
-            }
-
-            module.hot.accept();
-
-            if (!module.hot.data) {
-
-                ${records}
-            }
-            else {
+    }
                 
-                ${renders}
-
-                ${reloads}
-            }
+    public injectHMRVue(source: SourceFile, depenency: DependencyClass) {
+        if(configuration.hot) {
+            source.addStatements(`
+            import { HMRClass } from 'vue-di-kit';
+            let hmr = new HMRClass('${depenency.id}', ${depenency.symbol});
+            hmr.hot();
+            `);
+            source.formatText({indentSize: 4});
         }
-        `);
     }
 
     public mounted(cls: ClassDeclaration) {

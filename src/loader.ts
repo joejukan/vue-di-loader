@@ -1,8 +1,7 @@
 import {getOptions} from "loader-utils"
 import validateOptions = require("schema-utils");
-import {ASTClass, VueDIPlugin} from "./classification"
+import {ASTClass} from "./classification"
 import { schema, configuration } from "./globalization";
-
 export { pitch } from "./function";
 export { VueDIPlugin } from "./classification";
 
@@ -16,6 +15,7 @@ function load(this: Context, content: string){
     if(/\.vue$/i.test(this.resourcePath)){
         let ast = new ASTClass(this.resourcePath);
         ast.load(content);
+        ast.transpile();
         return ast.javascript;
     }
 
@@ -32,4 +32,5 @@ function load(this: Context, content: string){
     // pass through
     return content;
 }
+
 export default load;

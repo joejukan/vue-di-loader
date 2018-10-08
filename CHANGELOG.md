@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
 
+## [0.3.2] - 2018-10-08
+* updated `README.md` documentation to reflect the capabilities of the webpack hot module replacement support.
+* upgraded `package.json` to [vue-di-kit](https://www.npmjs.com/package/vue-di-kit) version `0.0.5`.
+* updated `ASTClass` class by removing the transpilation logic from the `load()` function.
+* updated `ASTClass` class by adding the `transpile()` function that converts typescript to javascript.
+* updated `ASTClass` class by renaming the `injectVueHotReloadApi()` function to `injectHMREntry()` and updating the hot api logic.
+* updated `ASTClass` class by adding the `injectHMRVue()` function that inject hot api logic into each `vue` SFC file.
+* updated `DependencyClass` class by adding the `id` property and setting it with the `uuid()` function in the constructor.
+* updated `load()` function to call the `ASTClass` `transpile()` function.
+
 ## [0.3.1] - 2018-10-02
 * updated `README.md` documentation to reflect support for WebPack's HOT reloading.
 * updated `PluginOptions` interface by adding the `hot` boolean property.

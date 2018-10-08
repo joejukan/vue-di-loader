@@ -2,9 +2,11 @@ import {posix} from "path";
 import {normalize} from "upath";
 import { Argumenter } from "@joejukan/argumenter";
 import { DependencyType } from "../enumeration";
+import { uuid } from "@joejukan/web-kit";
 
 const REGEX_VUE = /\.vue$/i;
 export class DependencyClass {
+    public id: string;
     public name: string;
     public path: string;
     public symbol: string;
@@ -21,6 +23,7 @@ export class DependencyClass {
     public constructor(name: string, symbol: string, path: string, defaulted: boolean);
     public constructor(...args){
         let argue = new Argumenter(args);
+        this.id = uuid();
         this.name = argue.string;
         this.symbol = argue.string;
         this.path = argue.string;

@@ -157,9 +157,13 @@ The [vu-di-kit](https://www.npmjs.com/package/vue-di-kit) framework kicks in aft
 ## Usage
 The typicall webpack config will  look as follows
 ```javascript
-const {resolve, join} = require('path');
+const {resolve} = require('path');
 const webpack = require('webpack');
+const HotModuleReplacementPlugin = webpack.HotModuleReplacementPlugin;
+const NamedModulesPlugin = webpack.NamedModulesPlugin;
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const { VueDIPlugin } = require('vue-di-loader');
 
 module.exports = {
@@ -174,12 +178,7 @@ module.exports = {
       {
         test: /\.vue$/,
         loader: 'vue-di-loader',
-        options: {
-          loaders: {
-            'scss': 'style-loader!css-loader!sass-loader',
-            'sass': 'style-loader!css-loader!sass-loader?indentedSyntax'
-          }
-        }
+        options: {}
       },
       {
         test: /\.tsx?$/,
@@ -197,7 +196,7 @@ module.exports = {
         ]
       },
       {
-        test: /\.(png|jpg|gif|svg)$/,
+        test: /\.(png|jpg|jpeg|gif|eot|ttf|woff|woff2|svg|svgz)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         loader: 'file-loader',
         options: {
           name: 'assets/images/[name].[ext]?[hash]'
@@ -205,20 +204,29 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        use: [
-            { loader: 'style-loader' },
-            { loader: 'css-loader' },
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: [
+            'css-loader',  
             { 
-                loader: 'sass-loader',
-                options: {
-                    includePaths: [ resolve('assets/scss') ]
-                } 
+              loader: 'sass-loader',
+              options: {
+                includePaths: [ resolve('assets/scss') ]
+              }
             }
-        ]
-      }
+          ]
+        })
+      },
+      {
+        test : /\.css$/,
+        use: ExtractTextPlugin.extract('css-loader')
+      },
+      { test: /\.html$/, loader: 'html-loader' }
     ]
   },
   plugins: [
+    new HotModuleReplacementPlugin({multiStep: false}),
+    new NamedModulesPlugin(),
     new HtmlWebpackPlugin({
         title: 'Vue DI Template',
         filename: 'index.html',
@@ -227,6 +235,7 @@ module.exports = {
         publicPath: '/',
         template: resolve('./src/main.html')
     }),
+    new ExtractTextPlugin({filename: 'styles.css'}),
     new VueDIPlugin({
       debug: false,
       components: {
@@ -249,10 +258,6 @@ module.exports = {
     alias: {
       'vue$': 'vue/dist/vue.esm.js'
     }
-  },
-  devServer: {
-    historyApiFallback: true,
-    noInfo: true
   },
   performance: {
     hints: false
@@ -315,41 +320,41 @@ new VueDIPlugin({
 })
 ```
 <br/><br/>**VueDIPlugin Options**<br/>
-|Name                        |Type                            |Default Value            |Description                                                                      |
-|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
-|**components**              |**ComponentOptions**            |                         |This defines the component injection configurations.                             |
+|Name                        |Type                            |Default Value            |Description                                                                                |
+|----------------------------|--------------------------------|-------------------------|-------------------------------------------------------------------------------------------|
+|**components**              |**ComponentOptions**            |                         |This defines the component injection configurations.                                       |
 |**debug**                   |**boolean**                     |`false`                  |This sets `vue-di-loader` to log in verbose mode, allowing logs during compilation process.|
-|**loaders**                 |**LoaderOptions**               |                         |This defines how `vue-di-loader` injects in support of other webpack loaders.    |
-|**parser**                  |**ParserOptions**               |                         |This defines how the `vue-di-loader` parsers operate.                            |
+|**loaders**                 |**LoaderOptions**               |                         |This defines how `vue-di-loader` injects in support of other webpack loaders.              |
+|**parser**                  |**ParserOptions**               |                         |This defines how the `vue-di-loader` parsers operate.                                      |
 
 <br/>**ComponentOptions**<br/>
-|Name                        |Type                            |Default Value            |Description                                                                      |
-|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
+|Name                        |Type                            |Default Value            |Description                                                                                                                                                                                                                                                          |
+|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |**entry**                   |**string** or **string[]**      |                         |This defines the path(s) to `typescript` files to direct the `vue-di-loader` to inject the SFC imports. It **should only be used** if the developer desires the injection to be done on typescript files other than the one(s) specified in the webpack entry option.|
-|**path**                    |**string** or **string[]**      |                         |The path or paths to search for single file components. It is recommended to use the resolve function from the path library.|
-|**deep**                    |**boolean**                     |`true`                   |if path is a directory, then this instructs the plugin to check sub directories for single file components.|
-|**hot**                     |**boolean**                     |`false`                  |This enables/disables support for Webpack's HOT reload.                           |
+|**path**                    |**string** or **string[]**      |                         |The path or paths to search for single file components. It is recommended to use the resolve function from the path library.                                                                                                                                         |
+|**deep**                    |**boolean**                     |`true`                   |if path is a directory, then this instructs the plugin to check sub directories for single file components.                                                                                                                                                          |
+|**hot**                     |**boolean**                     |`false`                  |This enables/disables support for Webpack's HOT reload.                                                                                                                                                                                                              |
 
 <br/>**LoaderOptions**<br/>
-|Name                        |Type                            |Default Value            |Description                                                                      |
-|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
-|**file**                    |**FileLoaderOptions**           |                         |This defines how `vue-di-loader` injects in support of the [file-loader](https://www.npmjs.com/package/file-loader).|
-|**sass**                    |**NodeSassOptions**             |                         |This defines how `vue-di-loader` utilizes the [node-sass](https://www.npmjs.com/package/node-sass) library to process the `<script>` tags.|
+|Name                        |Type                            |Default Value            |Description                                                                                                                               |
+|----------------------------|--------------------------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+|**file**                    |**FileLoaderOptions**           |                         |This defines how `vue-di-loader` injects in support of the [file-loader](https://www.npmjs.com/package/file-loader).                      |
+|**sass**                    |**LibSassOptions**              |                         |This defines how `vue-di-loader` utilizes the [lib-sass](https://www.npmjs.com/package/lib-sass) library to process the `<script>` tags.  |
 
 <br/>**FileLoaderOptions**<br/>
-|Name                        |Type                            |Default Value            |Description                                                                      |
-|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
-|**path**                    |**string**                      |                         |Instructs `vue-di-loader` where to look for files to inject as import statements into the chunk emitted from the entry `typescript` file.|
-|**type**                    |**string[]**                    |                         |If specified, instructs `vue-di-loader` which file types can be injected as import statemets into the chunk emitted from the entry `typescript` file.|
+|Name                        |Type                            |Default Value            |Description                                                                                                                                           |
+|----------------------------|--------------------------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+|**path**                    |**string**                      |                         |Instructs `vue-di-loader` where to look for files to inject as import statements into the chunk emitted from the entry `typescript` file.             |
+|**type**                    |**string[]**                    |                         |If specified, instructs `vue-di-loader` which file types can be injected as import statemets into the chunk emitted from the entry `typescript` file. |
 
-<br/>**NodeSassOptions**<br/>
-|Name                        |Type                            |Default Value            |Description                                                                      |
-|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
-|**path**                    |**string[]**                    |                         |Instructs `vue-di-loader` where to look for scss files to include during its processing of the contents of the `<script>` tag in the single file componets.|
+<br/>**LibSassOptions**<br/>
+|Name                        |Type                            |Default Value            |Description                                                                                                                                                |
+|----------------------------|--------------------------------|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+|**path**                    |**string[]**                    |                         |Instructs `vue-di-loader` where to look for scss files to import them in the entry `typescript` file.                                                   |
 
 <br/>**ParserOptions**<br/>
-|Name                        |Type                            |Default Value            |Description                                                                      |
-|----------------------------|--------------------------------|-------------------------|---------------------------------------------------------------------------------|
+|Name                        |Type                            |Default Value            |Description                                                                                                                                                                                                                                                                             |
+|----------------------------|--------------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 |**dom**                     |**boolean**                     |`false`                  |`vue-di-loader` uses regular expressions to search the contents of the `<template>` tag for SFC references.  If this option is enabled, then `vue-di-loader` will us [xmldom](https://www.npmjs.com/package/xmldom) to parse the contents of `<template>` and search for SFC references.|
 
 <br/>Note that it is not mandatory to use the `VueDIPlugin`.  The developer is always free to put the imports and the component injection in his/her code.  This may be preferrable if multiple `Vue` instances are used in the web app.  In the future the `VueDIPlugin` and `vue-di-loader` may be updated to target specific `Vue` instances for injection.<br/><br/>
@@ -388,13 +393,68 @@ export default class PictureComponent extends Vue { ... }
 `vue-di-loader` uses an [Abstract Syntax Tree](https://www.npmjs.com/package/ts-simple-ast) to identify the `name` property in the `@Component` decorator option.  `vue-di-loader` can see the code, but it will not evaluate the code (like it would be done by the app during runtime).  Therefore, it can only extract string literals and inject them as the component name.<br/>
 
 **Script Section in VUE file**<br/>
-The `vue-di-loader` uses [node-sass](https://www.npmjs.com/package/node-sass) to process the contents between the `<script>` tag in the `.vue` file.  The `vue-di-loader` then instructs the component to inject the `<script>` tag into its main HTML element.<br/>
-The `VueDIPlugin` provides a means to specify `scss` files to include during the processing of `<script>` tag; making it possible to use variables, that are defined in these external `scss` files, inside the `<script>` tag.<br/>
+The `vue-di-loader` uses [lib-sass](https://www.npmjs.com/package/lib-sass) to process the contents between the `<script>` tag in the `.vue` file.  The `vue-di-loader` then instructs the component to inject the `<script>` tag into the component's root HTML element.<br/>Note that `Shadow DOM` is not yet supported by `vue-di-loader`.<br/><br/>
+The `VueDIPlugin` provides a means to specify `scss` files to include during the processing of `<script>` tag; making it possible to import variables, that are defined in these external `scss` files, inside the `<script>` tag.<br/>
+```html
+<script>
+@import './assets/scss/variable.scss';
+.container {
+    background-color: $primary;
+}
+</script>
+```
+<br/>
 
 **VueDIPlugin ParserOptions.dom Setting**<br/>
 `vue-di-loader` searches the contents of the SFC `<template>` tag for other SFC references.  The found SFC references are then used to make import statements that are injected into the emitted chunk before going to the [ts-loader](https://www.npmjs.com/package/ts-loader).<br/>
 Normally, `vue-di-loader` uses regular expressions in this identification mechanism.  This is preferred since regex searches are quick and relatively reliable.<br/>
-If the `ParserOption.dom` property is set to true, `vue-di-loader` will parse the contents of `<template>` into a [xmldom](https://www.npmjs.com/package/xmldom) document.  It will then use the document's `getElementsByTagName()` method to search for other SFC references in the `<template>`.  This mechanism provides a more strict, but process intensive, search for SFC references.
+If the `ParserOption.dom` property is set to true, `vue-di-loader` will parse the contents of `<template>` into a [xmldom](https://www.npmjs.com/package/xmldom) document.  It will then use the document's `getElementsByTagName()` method to search for other SFC references in the `<template>`.  This mechanism provides a more strict, but process intensive, search for SFC references.<br/><br/>
+
+**Webpack Hot Module Replacement**<br/>
+`vue-di-loader` supports integration with Webpack's Hort Module Replacement (HMR) through [vue-hot-reload-api](https://www.npmjs.com/package/vue-hot-reload-api) and the [vue-di-kit](https://www.npmjs.com/package/vue-di-kit) [HMRClass](https://github.com/joejukan/vue-di-kit/blob/master/src/classification/hmr.class.ts).
+
+<br/>**01)** `vue-di-loader` will inject the following code into the `<script />` tag for all the `vue` SFC files during the webpack loading process.<br/>
+```typescript
+import { HMRClass } from 'vue-di-kit';
+
+// a uniquely generated id will be passed along with the component defined in the SFC file.
+let hmr = new HMRClass('ff25e4e0-d2ed-4f40-b663-83c912200c36', Component);
+
+// the HMRClass object will run its process to reload the component.
+hmr.hot();
+```
+<br/>**02)** `vue-di-loader` will inject the following code into the `<script></script>` tag for the `ts` typescript file indicated as the entry during the webpack loading process.<br/>
+```typescript
+declare let module: any;
+if(module.hot){
+    module.hot.accept();
+}
+```
+<br/>**03)** When using `NodeJS`, do not put the dev server options in the webpack configuration file `webpack.config.js`.  Instead, [as suggested by webpack](https://webpack.js.org/guides/hot-module-replacement/#via-the-node-js-api), define them on a separate javascript file and run it from there.  Below is an example:<br/>
+```javascript
+const webpackDevServer = require('webpack-dev-server');
+const webpack = require('webpack');
+
+const compilerOptions = require('../webpack.config');
+
+compilerOptions.mode = 'development';
+const devServerOptions = {
+  contentBase: './built',
+  hot: true,
+  host: 'localhost',
+  progress: true,
+  historyApiFallback: true
+};
+
+webpackDevServer.addDevServerEntrypoints(compilerOptions, devServerOptions);
+const compiler = webpack(compilerOptions);
+const server = new webpackDevServer(compiler, devServerOptions);
+server.listen(3000, 'localhost', () => {
+  console.log('dev server listening on port 3000');
+});
+
+```
+<br/>
 
 ## Installation
 Do the following steps to install **vue-di-loader**:
