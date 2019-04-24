@@ -7,8 +7,8 @@ import { renderSync } from "sass";
 
 import {readFileSync as read} from "fs";
 import AST, {SourceFile, VariableDeclarationKind, ImportDeclarationStructure, 
-    SyntaxKind, NewExpression, ObjectLiteralExpression, ClassDeclaration, MethodDeclaration, IndentStyle, Scope,
-    IfStatement} from "ts-simple-ast";
+    SyntaxKind, NewExpression, ObjectLiteralExpression, ClassDeclaration, MethodDeclaration, Scope,
+    ts} from "ts-simple-ast";
 import {transpile, ModuleResolutionKind, ModuleKind} from "typescript";
 import { preCompile, functionString, log, DependencyType } from '../.';
 import { Argumenter } from '@joejukan/argumenter';
@@ -431,7 +431,7 @@ export class ASTClass extends AST{
                 text += suffix;
             }
             method.setBodyText(text);
-            method.formatText({indentStyle: IndentStyle.Smart});
+            method.formatText({indentStyle: ts.IndentStyle.Smart});
         }
     }
 
@@ -457,7 +457,7 @@ export class ASTClass extends AST{
             text += suffix;
         }
         method.setBodyText(text);
-        method.formatText({indentStyle: IndentStyle.Smart});
+        method.formatText({indentStyle: ts.IndentStyle.Smart});
     }
     public addFile(path: string){
         ASTClass.addFile(path);

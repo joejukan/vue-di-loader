@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Vue DI Loader</title>
+    <link rel="stylesheet" href="https://unpkg.com/docute@4/dist/docute.css">
+    <link rel="stylesheet" href="assets/css/index.css">
+  </head>
+  <body>
+    <div id="docute"></div>
+    <script src="https://unpkg.com/docute@4/dist/docute.js"></script>
+    <script>
+      new Docute({
+        target: '#docute',
+        highlight: ['typescript', 'javascript', 'html', 'css'],
+        sidebar: [
+          {
+            title: 'General',
+            links: [
+              { title: 'Contributors', link: '../general/CONTRIBUTORS.md', toc: true },
+              { title: 'Change Log', link: '../general/CHANGELOG.md', toc: true },
+              { title: 'License', link: '../general/LICENSE.md', toc: true }
+            ]
+          },
+          {
+            title: 'Usage',
+            links: [
+              { title: 'Webpack Configuration', link: '../usage/WEBPACKCONFIG.md', toc: true }
+            ]
+          },
+          {
+            title: 'API',
+            links: [
+              { title: 'VueDIPlugin Options', link: '../api/VUEDIPLUGINOPTIONS.md', toc: true },
+              { title: 'Component Options', link: '../api/COMPONENTOPTIONS.md', toc: true },
+              { title: 'Loader Options', link: '../api/LOADEROPTIONS.md', toc: true },
+              { title: 'Parser Options', link: '../api/PARSEROPTIONS.md', toc: true },
+              { title: 'File Loader Options', link: '../api/FILELOADEROPTIONS.md', toc: true },
+              { title: 'Lib Sass Options', link: '../api/LIBSASSOPTIONS.md', toc: true }
+            ]
+          },
+          {
+            title: 'Notes',
+            links: [
+              { title: 'Vue Loader', link: '../notes/VUELOADER.md', toc: true },
+              { title: 'TS Loader', link: '../notes/TSLOADER.md', toc: true },
+              { title: 'XML DOM Search', link: '../notes/XMLDOMSEARCH.md', toc: true },
+              { title: 'Component Decorator Usage', link: '../notes/COMPONENTDECORATOR.md', toc: true },
+              { title: 'Style SFC Tags', link: '../notes/STYLESFCTAGS.md', toc: true },
+              { title: 'Webpack HMR Support', link: '../notes/WEBPACKHMR.md', toc: true }
+            ]
+          }
+        ]
+      })
+    </script>
+  </body>
+</html>

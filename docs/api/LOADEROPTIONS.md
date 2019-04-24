@@ -1,0 +1,5 @@
+# Loader Options
+|Name                        |Type                                              |Default Value            |Description                                                                                                                               |
+|----------------------------|--------------------------------------------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+|**file**                    |[FileLoaderOptions](../api/FILELOADEROPTIONS.md)  |                         |This defines how `vue-di-loader` injects in support of the [file-loader](https://www.npmjs.com/package/file-loader).                      |
+|**sass**                    |[LibSassOptions](../api/LIBSASSOPTIONS.md)        |                         |This defines how `vue-di-loader` utilizes the [lib-sass](https://www.npmjs.com/package/lib-sass) library to process the `<script>` tags.  |

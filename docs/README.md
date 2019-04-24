@@ -147,13 +147,9 @@ let app = new Vue({
 <br/>as can be seen from above, **vue-di-loader** has imported both single file components, and added them into the existing **Vue** object construction.<br/>
 The [vu-di-kit](https://www.npmjs.com/package/vue-di-kit) framework kicks in after transpilation to javascript.  The `@Component` decorator will transform the classes defined in the SFC files into actual **Vue** components.   The `@Routing` decorators will inject route definitions into global `routes` array in the [vu-di-kit](https://www.npmjs.com/package/vue-di-kit) module<br/><br/>
 
+### NOTES:
+**01)** **vue-di-loader** can transpile **SFC** components (`.vue` files) by itself, so it does not require [vue-loader](https://www.npmjs.com/package/vue-loader).<br/>
 
+**02)** At present, **vue-di-loader** does not transpile `.ts` files into javascript.  It only intercepts whatever is specified as a webpack entry and checks to see if there are any construction of **Vue** objects.  If those conditions are met, it will inject all the **SFC** components it is referred to into the typescript chunk being sent to [ts-loader](https://www.npmjs.com/package/ts-loader).  In the future, **vue-di-loader** may support transpiling `.ts` files by itself.<br/>
 
-## Installation
-Do the following steps to install **vue-di-loader**:
-```
-npm install vue-di-loader
-```
-
-## Documentation
-Please see the [Github Pages](https://joejukan.github.io/vue-di-loader) for more details.
+**03)** The **vue-di-loader** module has defined a webpack plugin `VueDIPlugin` that can be used to specify which directories or files to search for **SFC** components to inject into the webpack entry.<br/><br/>

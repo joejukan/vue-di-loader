@@ -1,0 +1,2 @@
+# TS Loader
+At present, **vue-di-loader** does not transpile `.ts` files into javascript.  It only intercepts whatever is specified as a webpack entry and checks to see if there are any construction of **Vue** objects.  If those conditions are met, it will inject all the **SFC** components it is referred to into the typescript chunk being sent to [ts-loader](https://www.npmjs.com/package/ts-loader).  In the future, **vue-di-loader** may support transpiling `.ts` files by itself.

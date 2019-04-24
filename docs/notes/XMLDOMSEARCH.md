@@ -1,0 +1,4 @@
+# XML DOM Search
+`vue-di-loader` searches the contents of the SFC `<template>` tag for other SFC references.  The found SFC references are then used to make import statements that are injected into the emitted chunk before going to the [ts-loader](https://www.npmjs.com/package/ts-loader).<br/>
+Normally, `vue-di-loader` uses regular expressions in this identification mechanism.  This is preferred since regex searches are quick and relatively reliable.<br/>
+If the `ParserOption.dom` property is set to true, `vue-di-loader` will parse the contents of `<template>` into a [xmldom](https://www.npmjs.com/package/xmldom) document.  It will then use the document's `getElementsByTagName()` method to search for other SFC references in the `<template>`.  This mechanism provides a more strict, but process intensive, search for SFC references.<br/><br/>

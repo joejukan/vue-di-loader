@@ -1,0 +1,25 @@
+:root {
+  --accent-color: #88CB3C;
+  --sidebar-section-title-color: #88CB3C;
+}
+.Content {
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+p code, table code, li code {
+  color: var(--accent-color) !important;
+}
+
+.header-inner, .header-right {
+  background-color: var(--accent-color) !important;
+}
+.site-title a {
+  color: white !important;
+}
+
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px var(--accent-color) !important;
+  background-color: #88CB3C !important;
+  border-radius: 5ßpx;
+}

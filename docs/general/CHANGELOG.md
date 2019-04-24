@@ -1,7 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.<br/>
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).<br/><br/>
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [0.4.0] - [FEATURE] Introduced Support for Vue 2.6 and Docute Documentation - 2019-04-24
+* updated many package dependencies.
+* added `docs/` folder for docute documentation.
 
 ## [0.3.3] - [FEATURE] Introduced Support for Scenarios where the Vue Module is Externalized in Webpack - 2018-11-04
 * upgraded `package.json` to [vue-di-kit](https://www.npmjs.com/package/vue-di-kit) version `0.0.6`.
@@ -21,13 +25,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * updated `PluginOptions` interface by adding the `hot` boolean property.
 * updated `VueDIPlugin` class so that its constructor function maps the `PluginOptions.hot` property to the `Configuration.hot` property.
 
-
 ## [0.3.0] - [FEATURE] Introduced Support for Webpack's Hot Replacement Module API - 2018-10-01
 * updated `package.json` to include the [vue-hot-reload-api](https://www.npmjs.com/package/vue-hot-reload-api) package.
 * updated `Configuration` interface by adding a `hot` property.
 * updated `ASTClass` class by adding the `injectVueHotReloadApi()` method to inject the vue hot reload api business logic.
 
-## [0.2.0] - [FEATURE] Introducedd SASS Module - 2018-09-29
+## [0.2.0] - [FEATURE] Introduced SASS Module - 2018-09-29
 * updated `package.json` to include the [sass](https://www.npmjs.com/package/sass) package.
 
 ## [0.1.0] - [IMPROVE] Added Timestamp to Logging - 2018-07-17
